@@ -1,0 +1,43 @@
+{
+  "dashboard": {
+    "title": "Dashboard",
+    "breadcrumb": "Dashboard"
+  },
+  "users": {
+    "title": "Uživatelé",
+    "breadcrumb": "Uživatelé"
+  },
+  "issues": {
+    "title": "Problemy",
+    "breadcrumb": "Problemy"
+  },
+  "new": {
+    "title": "Zadat nové",
+    "breadcrumb": "Zadat nové"
+  },
+  "reports": {
+    "title": "Hlášení",
+    "breadcrumb": "Hlášení"
+  },
+  "settings": {
+    "title": "Nastavení",
+    "breadcrumb": "Nastavení"
+  },
+  "machines": {
+    "title": "Stroje",
+    "breadcrumb": "Stroje"
+  },
+  "userDetail": {
+    "breadcrumb": "Detail uživatele",
+    "title": "Detail uživatele"
+  },
+  "userAdminTools": {
+    "breadcrumb": "SuperAdmin nástroje",
+    "title": "SuperAdmin nástroje"
+  },
+  "management": {
+    "breadcrumb": "Management",
+    "title": "Management"
+  }
+
+}

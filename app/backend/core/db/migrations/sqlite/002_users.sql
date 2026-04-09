@@ -1,0 +1,22 @@
+CREATE TABLE IF NOT EXISTS users (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  passwordHash TEXT NOT NULL,
+  role TEXT NOT NULL,
+  permissions TEXT,
+  isActive INTEGER NOT NULL
+  createdAt TEXT NOT NULL,
+  updatedAt TEXT NOT NULL,
+  personalNumber VARCHAR(255),
+  lastLoginAt TEXT,
+  failedLoginAttempts INTEGER,
+  mfaEnabled INTEGER NOT NULL,
+  avatarUrl VARCHAR(255),
+  foneNumber VARCHAR(255),
+  position VARCHAR(255),
+  department VARCHAR(255),
+  section VARCHAR(255),
+  workGroup VARCHAR(255),
+  location VARCHAR(255),
+);

@@ -1,0 +1,15 @@
+CREATE TABLE IF NOT EXISTS machines (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  name VARCHAR(255) NOT NULL,
+  description TEXT NULL,
+  serialNumber VARCHAR(255),
+  location VARCHAR(255),
+  isActive BOOLEAN NOT NULL,
+  createdAt TIMESTAMPTZ NOT NULL,
+  updatedAt TIMESTAMPTZ NOT NULL,
+  status VARCHAR(255),
+  lastSeenAt TEXT,
+  firmwareVersion VARCHAR(255),
+  ownerUserId VARCHAR(36),
+  tags TEXT,
+);

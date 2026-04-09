@@ -1,0 +1,9 @@
+{
+  "customerId": "COMPANY-12345",
+  "licenseType": "enterprise",
+  "expiresAt": "2027-12-31T23:59:59Z",
+  "maxUsers": 50,
+  "allowedModules": ["machines", "users", "issues"],
+  "allowedDatabases": ["postgres", "mysql", "mongo"],
+  "serverFingerprint": "9ccc525b843a15c12c13e771e11193a9f24a36aa10400f3c9dcf4d3a4e7f6cf4"
+}

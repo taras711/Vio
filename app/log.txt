@@ -1,0 +1,284 @@
+tabulka vio.audit_logs
+CREATE TABLE IF NOT EXISTS `audit_logs` (
+  `id` varchar(36) NOT NULL,
+  `timestamp` bigint(20) NOT NULL,
+  `userId` varchar(36) NOT NULL,
+  `action` varchar(255) NOT NULL,
+  `entity` varchar(255) NOT NULL,
+  `entityId` varchar(255) NOT NULL,
+  `userAgent` varchar(255) DEFAULT NULL,
+  `details` text,
+  `success` tinyint(1) NOT NULL DEFAULT '1',
+  `severity` varchar(255) DEFAULT NULL,
+  `ipAddress` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `forms` (
+  `id` varchar(36) NOT NULL,
+  `data` text NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `description` text,
+  `version` varchar(255) NOT NULL,
+  `createdBy` varchar(36) NOT NULL,
+  `updatedBy` varchar(36) NOT NULL,
+  `sectorId` varchar(36) DEFAULT NULL,
+  `createdAt` bigint(20) NOT NULL,
+  `updatedAt` bigint(20) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+CREATE TABLE IF NOT EXISTS `machines` (
+  `id` varchar(36) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `description` text,
+  `serialNumber` varchar(255) DEFAULT NULL,
+  `location` varchar(255) DEFAULT NULL,
+  `isActive` tinyint(1) NOT NULL,
+  `createdAt` bigint(20) NOT NULL,
+  `updatedAt` bigint(20) NOT NULL,
+  `status` varchar(255) DEFAULT NULL,
+  `lastSeenAt` text,
+  `firmwareVersion` varchar(255) DEFAULT NULL,
+  `ownerUserId` varchar(36) DEFAULT NULL,
+  `tags` text,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+
+CREATE TABLE IF NOT EXISTS `migrations` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `run_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`)
+) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8;
+
+
+
+CREATE TABLE IF NOT EXISTS `permissions` (
+  `id` varchar(36) NOT NULL,
+  `key` varchar(255) NOT NULL,
+  `description` text,
+  `createdAt` bigint(20) NOT NULL,
+  `updatedAt` bigint(20) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+CREATE TABLE IF NOT EXISTS `plugins` (
+  `id` varchar(36) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `path` varchar(255) NOT NULL,
+  `permissions` text,
+  `status` varchar(255) DEFAULT NULL,
+  `sector` varchar(255) DEFAULT NULL,
+  `version` varchar(255) DEFAULT NULL,
+  `createdAt` bigint(20) NOT NULL,
+  `updatedAt` bigint(20) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+CREATE TABLE IF NOT EXISTS `reports` (
+  `id` varchar(36) NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `shiftId` varchar(36) NOT NULL,
+  `machineId` varchar(36) NOT NULL,
+  `shiftType` varchar(255) NOT NULL,
+  `status` varchar(255) NOT NULL,
+  `date` bigint(20) NOT NULL,
+  `proposedSolution` varchar(255) DEFAULT NULL,
+  `zoneId` varchar(36) DEFAULT NULL,
+  `message` text,
+  `createdAt` bigint(20) NOT NULL,
+  `updatedAt` bigint(20) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+CREATE TABLE IF NOT EXISTS `roles` (
+  `id` varchar(36) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `description` text,
+  `createdAt` bigint(20) NOT NULL,
+  `updatedAt` bigint(20) NOT NULL,
+  `role_permissions` text,
+  `user_roles` text,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+CREATE TABLE IF NOT EXISTS `sectors` (
+  `id` varchar(36) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `description` text,
+  `parentSectorId` varchar(36) DEFAULT NULL,
+  `permissions` text,
+  `createdAt` bigint(20) NOT NULL,
+  `updatedAt` bigint(20) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `sessions` (
+  `id` varchar(36) NOT NULL,
+  `userId` varchar(36) NOT NULL,
+  `token` varchar(255) NOT NULL,
+  `createdAt` bigint(20) NOT NULL,
+  `lastActivityAt` bigint(20) NOT NULL,
+  `userAgent` varchar(255) DEFAULT NULL,
+  `isActive` tinyint(1) NOT NULL,
+  `expiresAt` bigint(20) NOT NULL,
+  `ipAddress` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `settings` (
+  `id` varchar(36) NOT NULL,
+  `key` varchar(255) NOT NULL,
+  `val` text NOT NULL,
+  `updatedAt` bigint(20) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+CREATE TABLE IF NOT EXISTS `shifts` (
+  `id` varchar(36) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `shiftLeaderId` varchar(36) NOT NULL,
+  `createdAt` bigint(20) NOT NULL,
+  `updatedAt` bigint(20) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+CREATE TABLE IF NOT EXISTS `skills` (
+  `id` varchar(255) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `level` varchar(255) NOT NULL,
+  `userId` varchar(36) NOT NULL,
+  `sectorId` varchar(36) NOT NULL,
+  `machineId` varchar(36) NOT NULL,
+  `createdAt` bigint(20) NOT NULL,
+  `updatedAt` bigint(20) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+CREATE TABLE IF NOT EXISTS `tasks` (
+  `id` varchar(36) NOT NULL,
+  `type` varchar(255) NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `createdBy` varchar(36) NOT NULL,
+  `status` enum('open','inProgress','waiting','done','cancelled','failed') NOT NULL,
+  `dueDate` bigint(20) NOT NULL,
+  `priority` enum('low','medium','high','critical') NOT NULL,
+  `description` text NOT NULL,
+  `sectorId` varchar(36) NOT NULL,
+  `assignedTo` varchar(36) DEFAULT NULL,
+  `forMachineId` varchar(36) DEFAULT NULL,
+  `forShiftId` varchar(36) DEFAULT NULL,
+  `forZoneId` varchar(36) DEFAULT NULL,
+  `forSkillId` varchar(36) DEFAULT NULL,
+  `forGroupId` varchar(36) DEFAULT NULL,
+  `formId` varchar(36) NOT NULL,
+  `completedAt` bigint(20) DEFAULT NULL,
+  `createdAt` bigint(20) NOT NULL,
+  `updatedAt` bigint(20) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+CREATE TABLE IF NOT EXISTS `task_attachments` (
+  `id` varchar(36) NOT NULL,
+  `taskId` varchar(36) NOT NULL,
+  `attachmentId` varchar(36) NOT NULL,
+  `filePath` varchar(255) NOT NULL,
+  `createdAt` bigint(20) NOT NULL,
+  `updatedAt` bigint(20) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+CREATE TABLE IF NOT EXISTS `task_comments` (
+  `id` varchar(36) NOT NULL,
+  `taskId` varchar(36) NOT NULL,
+  `userId` varchar(36) NOT NULL,
+  `message` text NOT NULL,
+  `createdAt` bigint(20) NOT NULL,
+  `updatedAt` bigint(20) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+CREATE TABLE IF NOT EXISTS `task_history` (
+  `id` varchar(36) NOT NULL,
+  `taskId` varchar(36) NOT NULL,
+  `userId` varchar(36) NOT NULL,
+  `action` varchar(255) NOT NULL,
+  `details` text NOT NULL,
+  `timestamp` bigint(20) NOT NULL,
+  `createdAt` bigint(20) NOT NULL,
+  `updatedAt` bigint(20) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+CREATE TABLE IF NOT EXISTS `teams_groups` (
+  `id` varchar(36) NOT NULL,
+  `leaderId` varchar(36) NOT NULL,
+  `name` varchar(36) NOT NULL,
+  `sectorId` varchar(36) NOT NULL,
+  `createdAt` bigint(20) NOT NULL,
+  `updatedAt` bigint(20) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+
+CREATE TABLE IF NOT EXISTS `users` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `email` varchar(255) NOT NULL,
+  `passwordHash` varchar(255) NOT NULL,
+  `role` varchar(50) NOT NULL,
+  `permissions` text,
+  `isActive` tinyint(1) NOT NULL,
+  `createdAt` bigint(20) NOT NULL,
+  `updatedAt` bigint(20) NOT NULL,
+  `personalNumber` varchar(255) DEFAULT NULL,
+  `lastLoginAt` text,
+  `failedLoginAttempts` int(11) DEFAULT NULL,
+  `mfaEnabled` tinyint(1) NOT NULL,
+  `avatarUrl` varchar(255) DEFAULT NULL,
+  `phoneNumber` varchar(255) DEFAULT NULL,
+  `position` varchar(255) DEFAULT NULL,
+  `department` varchar(255) DEFAULT NULL,
+  `section` varchar(255) DEFAULT NULL,
+  `workGroup` varchar(255) DEFAULT NULL,
+  `location` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8;
+
+
+CREATE TABLE IF NOT EXISTS `zones` (
+  `id` varchar(36) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `machineId` varchar(36) NOT NULL,
+  `description` text,
+  `createdAt` bigint(20) NOT NULL,
+  `updatedAt` bigint(20) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+-- Export dat nebyl vybrán.
+
+-- Exportování struktury pro tabulka vio.zone_components
+CREATE TABLE IF NOT EXISTS `zone_components` (
+  `id` varchar(36) NOT NULL,
+  `zoneId` varchar(36) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `createdAt` bigint(20) NOT NULL,
+  `updatedAt` bigint(20) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;

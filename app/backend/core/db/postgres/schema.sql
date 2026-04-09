@@ -1,0 +1,8 @@
+
+CREATE TABLE IF NOT EXISTS audit_log (
+  id SERIAL PRIMARY KEY,
+  userId TEXT,
+  action TEXT NOT NULL,
+  details JSONB,
+  createdAt TIMESTAMP NOT NULL DEFAULT NOW()
+);

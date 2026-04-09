@@ -1,0 +1,30 @@
+{
+  "database": {
+    "type": "mysql",
+    "host": "localhost",
+    "port": 3306,
+    "user": "root",
+    "password": "",
+    "database": "vio"
+  },
+  "security": {
+    "jwtPrivateKey": "./backend/config/keys/jwt_private.pem",
+    "jwtPublicKey": "./backend/config/keys/jwt_public.pem",
+    "accessTokenTtlSeconds": 900,
+    "refreshTokenTtlSeconds": 1209600,
+    "passwordHashRounds": 12,
+    "maxLoginAttempts": 5,
+    "lockoutMinutes": 15
+  },
+  "server": {
+    "port": 3000,
+    "trustProxy": false,
+    "rateLimit": {
+      "windowMs": 60000,
+      "max": 100
+    }
+  },
+  "setup": {
+    "isConfigured": true
+  }
+}

@@ -1,0 +1,9 @@
+CREATE TABLE users (
+  id VARCHAR(36) NOT NULL,
+  email VARCHAR(255) NOT NULL,
+  passwordHash VARCHAR(255) NOT NULL,
+  role VARCHAR(50) NOT NULL,
+  permissions BLOB SUB_TYPE TEXT,
+  isActive SMALLINT NOT NULL,
+  PRIMARY KEY (id)
+);

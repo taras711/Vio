@@ -1,0 +1,15 @@
+CREATE TABLE IF NOT EXISTS machines (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  description TEXT NULL,
+  serialNumber TEXT,
+  location TEXT,
+  isActive INTEGER NOT NULL,
+  createdAt TEXT NOT NULL,
+  updatedAt TEXT NOT NULL,
+  status VARCHAR(255),
+  lastSeenAt TEXT,
+  firmwareVersion VARCHAR(255),
+  ownerUserId VARCHAR(36),
+  tags TEXT,
+);

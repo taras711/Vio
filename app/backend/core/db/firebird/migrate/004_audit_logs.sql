@@ -1,0 +1,10 @@
+CREATE TABLE audit_logs (
+  id VARCHAR(36) NOT NULL,
+  timestamp NUMERIC(18,0) NOT NULL,
+  userId VARCHAR(36) NOT NULL,
+  action VARCHAR(255) NOT NULL,
+  entity VARCHAR(255) NOT NULL,
+  entityId VARCHAR(255) NOT NULL,
+  details BLOB SUB_TYPE TEXT,
+  PRIMARY KEY (id)
+);

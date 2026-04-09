@@ -1,0 +1,30 @@
+{
+  "dashboard": {
+    "title": "Dashboard",
+    "breadcrumb": "Dashboard"
+  },
+  "users": {
+    "title": "Users",
+    "breadcrumb": "Users"
+  },
+  "issues": {
+    "title": "Issues",
+    "breadcrumb": "Issues"
+  },
+  "new": {
+    "title": "Create new",
+    "breadcrumb": "Create new"
+  },
+  "reports": {
+    "title": "Reports",
+    "breadcrumb": "Reports"
+  },
+  "settings": {
+    "title": "Settings",
+    "breadcrumb": "Settings"
+  },
+  "machines": {
+    "title": "Machines",
+    "breadcrumb": "Machines"
+  }
+}

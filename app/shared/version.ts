@@ -1,0 +1,1 @@
+export const APP_VERSION = "1.0.4.0426.-beta"; // 1.[1.0] - app version, 2.[.4.] - backend version, 3.[.0] - frontend version, 4.[.YYYYMMDD] - date or build number, 5.[.alpha | .beta | .stable] - release stage
