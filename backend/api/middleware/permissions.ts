@@ -9,7 +9,7 @@ export function requirePermission(permission: Permission) {
       return res.status(401).json({ error: "Not authenticated" });
     }
 
-    if (auth.role === "superAdmin") {
+    if (auth.role === "superadmin") {
       return next();
     }
 

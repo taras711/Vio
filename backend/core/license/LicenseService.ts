@@ -3,7 +3,7 @@ import path from "path";
 import crypto from "crypto";
 import { decodeBase58ToJson } from "./licenseKey";   // ← TADY JE OPRAVA
 import type { LicenseModel } from "./LicenseModel";
-import { generateShortCode } from "./ShortCode";
+import { generateShortCode, canonicalize } from "./ShortCode";
 
 export class LicenseService {
   private license: LicenseModel;
@@ -33,27 +33,30 @@ export class LicenseService {
     }
   }
 
-  private verifySignature(license: LicenseModel) {
-    const { signature, ...unsigned } = license;
-    const canonical = JSON.stringify(unsigned, Object.keys(unsigned).sort());
+private verifySignature(license: LicenseModel) {
+  const { signature, ...unsigned } = license;
+  const canonical = canonicalize(unsigned); // ← použij stejnou funkci jako při podpisu
 
-    const publicKeyPath = path.resolve(__dirname, "../../config/license_public.pem");
-    const publicKey = fs.readFileSync(publicKeyPath, "utf8");
+  const publicKeyPath = path.resolve(__dirname, "../../config/license_public.pem");
+  const publicKey = fs.readFileSync(publicKeyPath, "utf8");
 
-    const verifier = crypto.createVerify("RSA-SHA256");
-    verifier.update(canonical);
-    verifier.end();
+  const verifier = crypto.createVerify("RSA-SHA256");
+  verifier.update(canonical);
+  verifier.end();
 
-    if (!verifier.verify(publicKey, signature, "base64")) {
-      throw new Error("Invalid license signature");
-    }
+  if (!verifier.verify(publicKey, signature, "base64")) {
+    throw new Error("Invalid license signature");
   }
+}
+
 
   isShortCodeValid(input: string): boolean {
-    const json = JSON.stringify(this.license);
-    const expected = generateShortCode(json);
+    const { signature, ...unsigned } = this.license;
+    const canonical = canonicalize(unsigned);
+    const expected = generateShortCode(canonical);
     return expected === input.toUpperCase();
   }
+
 
   getLicense() {
     return this.license;

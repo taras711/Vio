@@ -7,7 +7,7 @@ export interface User {
   name: string;
   passwordHash: string;
   role: Role;
-  permissions: Permission[];
+  permissions: string[];
   isActive: boolean;
 }
 
@@ -16,7 +16,7 @@ export interface CreateUserDto {
   name: string;
   password: string;
   role: Role;
-  permissions: Permission[];
+  permissions: string[];
 }
 
 export interface UpdateUserDto {
@@ -24,6 +24,6 @@ export interface UpdateUserDto {
   name?: string;
   password?: string;
   role?: Role;
-  permissions?: Permission[];
+  permissions?: string[];
   isActive?: boolean;
 }

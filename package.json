@@ -1,5 +1,5 @@
 {
-  "name": "app",
+  "name": "meris",
   "private": true,
   "version": "0.0.0",
   "type": "commonjs",
@@ -30,6 +30,7 @@
     "better-sqlite3": "^12.8.0",
     "bs58": "^6.0.0",
     "cors": "^2.8.6",
+    "dotenv": "^17.4.1",
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
     "lucide-react": "^1.7.0",
@@ -42,7 +43,8 @@
     "react-dom": "^18.3.1",
     "react-i18next": "^17.0.1",
     "react-router-dom": "^7.13.2",
-    "rfc4648": "^1.5.4"
+    "rfc4648": "^1.5.4",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",

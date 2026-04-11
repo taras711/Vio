@@ -5,6 +5,8 @@ import { MySqlAdapter } from "./mysql/MySqlAdapter";
 import { MongoAdapter } from "./mongo/MongoAdapter";
 import { FirebirdAdapter } from "./firebird/FirebirdAdapter";
 import { SQLiteAdapter } from "./sqlite/SQLiteAdapter";
+import dotenv from "dotenv";
+dotenv.config();
 
 export interface DbConfig {
     type: "postgres" | "mysql" | "mongo" | "firebird" | "sqlite";
@@ -18,6 +20,7 @@ export interface DbConfig {
 }
 
 export async function createDatabaseAdapter(config: DbConfig): Promise<DatabaseAdapter> {
+  const type = process.env.DB_TYPE;
   switch (config.type) {
     case "postgres":
       return new PostgresAdapter({
@@ -29,7 +32,14 @@ export async function createDatabaseAdapter(config: DbConfig): Promise<DatabaseA
       });
 
     case "mysql":
-      return new MySqlAdapter(config);
+      return new MySqlAdapter({
+        host: process.env.DB_HOST!,
+        port: Number(process.env.DB_PORT),
+        user: process.env.DB_USER!,
+        password: process.env.DB_PASSWORD!,
+        database: process.env.DB_NAME!
+      });
+
 
     case "mongo":
       return new MongoAdapter(config.url!, config.database!);

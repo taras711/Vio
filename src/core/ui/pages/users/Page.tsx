@@ -122,7 +122,7 @@ function UsersGrid({ data }: { data: UserRow[] }) {
         </div>
         <Box sx={{ display: 'flex'}}>
           <Button size="small" onClick={() => navigate(`/users/${u.id}`)}>Detail</Button>
-          <Button size="small" onClick={() => navigate(`/users/${u.id}/admin`)}>SuperAdmin</Button>
+          <Button size="small" onClick={() => navigate(`/users/${u.id}/admin`)}>superadmin</Button>
         </Box>
       </UserCard>
     ))}

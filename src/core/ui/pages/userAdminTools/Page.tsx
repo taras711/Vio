@@ -154,7 +154,7 @@ function RoleTab({ userData, onChange }: RoleTabProps) {
     });
   };
 
-  const ROLES: string[] = ["user", "admin", "superAdmin"];
+  const ROLES: string[] = ["user", "admin", "superadmin"];
 
   return (
     <Card>

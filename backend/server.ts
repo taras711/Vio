@@ -8,7 +8,7 @@ import { createAuthenticateMiddleware } from "./api/middleware/authenticate";
 import { JwtAuthService } from "./core/auth/JwtAuthService";
 import { createDatabaseAdapter, DbConfig } from "./core/db/createAdapter";
 import { SetupService } from "./setup/SetupService";
-
+import crypto from "crypto";
 import { createSetupRouter } from "./setup/SetupController";
 import { createUserModule } from "./modules/users";
 import { ModuleLoader } from "./core/modules/ModuleLoader";
@@ -20,19 +20,64 @@ import { createAuthRouter } from "./api/routes/auth";
 import { createUserRoutes } from "./modules/users/userRoutes";
 import { UserService } from "./modules/users/UserService";
 import { UserController } from "./modules/users/UserController";
+import cors from "cors";
+
 
 const config = configJson;
 
 async function main() {
     const app = express();
+
+    // CSRF TOKEN GENERATOR – MUSÍ BÝT PRVNÍ
+    // ALWAYS attach CSRF token to every JSON response
+    app.use((req, res, next) => {
+        const send = res.json;
+
+        res.json = function (body) {
+            if (!req.headers["x-csrf-token"]) {
+                const csrf = crypto.randomBytes(32).toString("hex");
+                res.setHeader("x-csrf-token", csrf);
+            }
+            return send.call(this, body);
+        };
+
+        next();
+    });
+
+
     app.use(express.json());
 
+    app.use(cors({
+        origin: [
+        "https://app.vio.com",
+        "http://localhost:5173"
+        ],
+        credentials: true,
+        methods: ["GET", "POST", "PUT", "DELETE"]
+    }));
     const setup = new SetupService(null);
 
     console.log("SERVER STARTED");
     console.log("CONFIGURED AT START:", setup.isConfigured());
 
-    // Debug log
+    app.use((req, res, next) => {
+        const url = req.originalUrl;
+
+        if (
+            url === "/api/auth/login" ||
+            url === "/api/auth/refresh"
+        ) {
+            return next();
+        }
+
+        const token = req.headers["x-csrf-token"];
+        if (!token) {
+            return res.status(403).json({ error: "Missing CSRF token" });
+        }
+
+        next();
+    });
+
     app.use((req, res, next) => {
         console.log("REQ:", req.method, req.path);
         next();

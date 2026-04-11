@@ -45,24 +45,49 @@ async findOne<T>(table: string, query: any): Promise<T | null> {
   return rows[0] ?? null;
 }
 
-  async insert<T>(table: string, data: T): Promise<void> {
-    await this.pool.query(
-      `INSERT INTO \`${table}\` SET ?`,
-      [data]
-    );
-  }
+async insert<T extends Record<string, any>>(table: string, data: T): Promise<void> {
+  const keys = Object.keys(data);
+  const values = Object.values(data);
 
-  async update<T>(table: string, query: any, data: Partial<T>): Promise<void> {
-    await this.pool.query(
-      `UPDATE \`${table}\` SET ? WHERE ?`,
-      [data, query]
-    );
-  }
+  const columns = keys.map(k => `\`${k}\``).join(", ");
+  const placeholders = keys.map(() => "?").join(", ");
 
-  async delete(table: string, query: any): Promise<void> {
-    await this.pool.query(
-      `DELETE FROM \`${table}\` WHERE ?`,
-      [query]
-    );
-  }
+  const sql = `INSERT INTO \`${table}\` (${columns}) VALUES (${placeholders})`;
+
+  await this.pool.query(sql, values);
+}
+
+
+
+async update<T extends Record<string, any>>(
+  table: string,
+  query: Record<string, any>,
+  data: Partial<T>
+): Promise<void> {
+  const setKeys = Object.keys(data);
+  const setValues = Object.values(data);
+
+  const whereKeys = Object.keys(query);
+  const whereValues = Object.values(query);
+
+  const setSql = setKeys.map(k => `\`${k}\` = ?`).join(", ");
+  const whereSql = whereKeys.map(k => `\`${k}\` = ?`).join(" AND ");
+
+  const sql = `UPDATE \`${table}\` SET ${setSql} WHERE ${whereSql}`;
+
+  await this.pool.query(sql, [...setValues, ...whereValues]);
+}
+
+
+async delete(table: string, query: Record<string, any>): Promise<void> {
+  const whereKeys = Object.keys(query);
+  const whereValues = Object.values(query);
+
+  const whereSql = whereKeys.map(k => `\`${k}\` = ?`).join(" AND ");
+
+  const sql = `DELETE FROM \`${table}\` WHERE ${whereSql}`;
+
+  await this.pool.query(sql, whereValues);
+}
+
 }

@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS users (
   passwordHash TEXT NOT NULL,
   role TEXT NOT NULL,
   permissions TEXT,
-  isActive INTEGER NOT NULL
+  isActive INTEGER NOT NULL,
   createdAt TEXT NOT NULL,
   updatedAt TEXT NOT NULL,
   personalNumber VARCHAR(255),

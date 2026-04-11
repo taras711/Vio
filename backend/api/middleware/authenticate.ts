@@ -40,7 +40,7 @@ req.auth = {
 }
 
 function toRole(value: string): Role {
-  if (value === "admin" || value === "user" || value === "superAdmin") {
+  if (value === "admin" || value === "user" || value === "superadmin") {
     return value;
   }
   throw new Error("Invalid role in token");

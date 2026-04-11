@@ -1,7 +1,7 @@
 import type { Role, Permission } from "./types";
 
 export const RolePermissions: Record<Role, Permission[]> = {
-  superAdmin: ["*"],
+  superadmin: ["*"],
 
   admin: [
     "machines.read",

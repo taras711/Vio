@@ -69,20 +69,37 @@ export class PostgresAdapter implements DatabaseAdapter {
         return result.rows[0] ?? null;
     }
 
-    async update<T>(table: string, id: string, data: Partial<T>): Promise<void> {
-        const obj = data as Record<string, any>;
-        const keys = Object.keys(obj);
-        const values = Object.values(obj);
+async update<T extends Record<string, any>>(
+  table: string,
+  query: Record<string, any>,
+  data: Partial<T>
+): Promise<void> {
+  const setKeys = Object.keys(data);
+  const setValues = Object.values(data);
 
-        const set = keys.map((k, i) => `"${k}" = $${i + 1}`).join(", ");
+  const whereKeys = Object.keys(query);
+  const whereValues = Object.values(query);
 
-        const sql = `UPDATE "${table}" SET ${set} WHERE "id" = $${keys.length + 1}`;
+  const setSql = setKeys.map(k => `"${k}" = $${setKeys.indexOf(k) + 1}`).join(", ");
 
-        await this.pool.query(sql, [...values, id]);
-    }
+  const offset = setKeys.length;
+  const whereSql = whereKeys
+    .map((k, i) => `"${k}" = $${offset + i + 1}`)
+    .join(" AND ");
 
-  async delete(table: string, id: string): Promise<void> {
-    const sql = `DELETE FROM "${table}" WHERE "id" = $1`;
-    await this.pool.query(sql, [id]);
-  }
+  const sql = `UPDATE "${table}" SET ${setSql} WHERE ${whereSql}`;
+
+  await this.pool.query(sql, [...setValues, ...whereValues]);
+}
+
+async delete(table: string, query: Record<string, any>): Promise<void> {
+  const whereKeys = Object.keys(query);
+  const whereValues = Object.values(query);
+
+  const whereSql = whereKeys.map(k => `"${k}" = $${whereKeys.indexOf(k) + 1}`).join(" AND ");
+
+  const sql = `DELETE FROM "${table}" WHERE ${whereSql}`;
+
+  await this.pool.query(sql, whereValues);
+}
 }

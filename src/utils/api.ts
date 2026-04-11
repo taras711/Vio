@@ -5,15 +5,24 @@ const api = axios.create({
 });
 
 // REQUEST: přidáme access token
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("accessToken");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+axios.interceptors.request.use((config) => {
+  const csrf = localStorage.getItem("csrf");
+  if (csrf) {
+    config.headers["x-csrf-token"] = csrf;
   }
   return config;
 });
 
-// RESPONSE: zachytíme 401 a zkusíme refresh
+// 1) CSRF RESPONSE INTERCEPTOR – MUSÍ BÝT PRVNÍ
+api.interceptors.response.use((response) => {
+  const csrf = response.headers["x-csrf-token"];
+  if (csrf) {
+    localStorage.setItem("csrf", csrf);
+  }
+  return response;
+});
+
+// 2) REFRESH TOKEN INTERCEPTOR – MUSÍ BÝT AŽ POD TÍM
 let isRefreshing = false;
 let queue: any[] = [];
 
@@ -25,14 +34,13 @@ api.interceptors.response.use(
     if (original.url?.includes("/auth/login")) {
       return Promise.reject(error);
     }
-    // pokud není 401 → normální chyba
+
     if (error.response?.status !== 401 || original._retry) {
       return Promise.reject(error);
     }
 
     original._retry = true;
 
-    // pokud už probíhá refresh → počkáme
     if (isRefreshing) {
       return new Promise((resolve, reject) => {
         queue.push({ resolve, reject });
@@ -58,12 +66,10 @@ api.interceptors.response.use(
       localStorage.setItem("accessToken", newAccess);
       localStorage.setItem("refreshToken", newRefresh);
 
-      // probudíme čekající requesty
       queue.forEach((p) => p.resolve(newAccess));
       queue = [];
       isRefreshing = false;
 
-      // zopakujeme původní request
       original.headers.Authorization = `Bearer ${newAccess}`;
       return api(original);
 
@@ -75,12 +81,10 @@ api.interceptors.response.use(
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
 
-      // ❌ window.location.href = "/login";
-      // ✔ nech to na ProtectedRoute
       return Promise.reject(err);
     }
-
   }
 );
+
 
 export default api;

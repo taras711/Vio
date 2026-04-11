@@ -32,7 +32,7 @@ export default function UserDetailPage() {
             to={`/users/${id}/admin`}
             className="text-blue-600 underline"
           >
-            Open SuperAdmin Tools
+            Open superadmin Tools
           </Link>
         </div>
       )}

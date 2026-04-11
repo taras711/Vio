@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS users (
   passwordHash VARCHAR(255) NOT NULL,
   role VARCHAR(50) NOT NULL,
   permissions JSONB,
-  isActive BOOLEAN NOT NULL
+  isActive BOOLEAN NOT NULL,
   createdAt TIMESTAMP NOT NULL DEFAULT NOW(),
   updatedAt TIMESTAMP NOT NULL DEFAULT NOW(),
   personalNumber VARCHAR(255),
@@ -22,3 +22,7 @@ CREATE TABLE IF NOT EXISTS users (
   workGroup VARCHAR(255),
   location VARCHAR(255),
 );
+
+ALTER TABLE users
+    ALTER COLUMN permissions TYPE JSONB
+    USING permissions::jsonb;

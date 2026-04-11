@@ -7,6 +7,6 @@ export interface User {
   name: string;
   passwordHash: string;
   role: Role;
-  permissions: Permission[];
+  permissions: string[];
   isActive: boolean;
 }

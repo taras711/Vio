@@ -13,7 +13,7 @@ export class DefaultPermissionService implements PermissionService {
   hasPermission(ctx: AuthContext, permission: Permission): boolean {
     if (!ctx) return false;
 
-    // superAdmin má vše
+    // superadmin má vše
     if (ctx.permissions.includes("*")) return true;
 
     return ctx.permissions.includes(permission);

@@ -14,3 +14,15 @@ export function generateShortCode(fullLicenseJson: string): string {
   // Rozsekáme do bloků po 4 znacích
   return short.match(/.{1,4}/g)!.join("-");
 }
+
+export function canonicalize(obj: any): string {
+  if (obj === null || typeof obj !== "object") return JSON.stringify(obj);
+
+  if (Array.isArray(obj)) {
+    return "[" + obj.map(canonicalize).join(",") + "]";
+  }
+
+  const keys = Object.keys(obj).sort();
+  const entries = keys.map(k => `${JSON.stringify(k)}:${canonicalize(obj[k])}`);
+  return "{" + entries.join(",") + "}";
+}

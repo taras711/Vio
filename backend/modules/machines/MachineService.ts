@@ -30,13 +30,13 @@ export class MachineService {
   }
 
   async update(id: string, dto: UpdateMachineDto): Promise<void> {
-    await this.db.update("machines", id, {
+    await this.db.update("machines", { id }, {
       ...dto,
       updatedAt: new Date().toISOString()
     });
   }
 
   async delete(id: string): Promise<void> {
-    await this.db.delete("machines", id);
+    await this.db.delete("machines", { id });
   }
 }

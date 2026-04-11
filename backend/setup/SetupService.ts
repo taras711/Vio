@@ -75,7 +75,7 @@ this.db = await createDatabaseAdapter(normalizeDbConfig(payload.database));
 
 
     // 5) Vytvořit superadmina
-    await this.createSuperAdmin(payload.email, payload.password, payload.name);
+    await this.createsuperadmin(payload.email, payload.password, payload.name);
 console.log(">>> runSetup FINISHED, isConfigured = true");
 
 if (this.onConfigured) {
@@ -100,7 +100,7 @@ private updateConfig(dbConfig: any) {
   fs.writeFileSync(this.configPath, JSON.stringify(config, null, 2));
 }
 
-  private async createSuperAdmin(email: string, password: string, name: string = "Super Admin") {
+  private async createsuperadmin(email: string, password: string, name: string = "Super Admin") {
     if (!this.db) throw new Error("Database not initialized");
     const now = Date.now(); // ms
     const hash = await bcrypt.hash(password, 12);
@@ -109,7 +109,7 @@ private updateConfig(dbConfig: any) {
     email,
     name,
     passwordHash: hash,
-    role: "superAdmin",
+    role: "superadmin",
     permissions: JSON.stringify(["*"]),
     createdAt: now,
     updatedAt: now,

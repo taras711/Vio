@@ -22,3 +22,7 @@ CREATE TABLE IF NOT EXISTS users (
   location VARCHAR(255),
   PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+
+ALTER TABLE users
+    MODIFY permissions JSON NOT NULL;
+

@@ -1,6 +1,7 @@
 // backend/modules/users/UserController.ts
 import type { Request, Response } from "express";
 import type { UserService } from "./UserService";
+import { CreateUserSchema } from "../../schemas/user.schema"; // nahoře
 
 export class UserController {
   constructor(private users: UserService) {}
@@ -19,8 +20,19 @@ export class UserController {
     };
 
   create = async (req: Request, res: Response) => {
+    const parsed = CreateUserSchema.safeParse(req.body);
+
+    if (!parsed.success) {
+      return res.status(400).json({
+        error: "Invalid input",
+        details: parsed.error.flatten()
+      });
+    }
+
+    const dto = parsed.data;
+
     try {
-      const user = await this.users.create(req.body);
+      const user = await this.users.create(dto);
       res.json(user);
     } catch (err: any) {
       res.status(400).json({ error: err.message });

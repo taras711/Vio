@@ -17,7 +17,7 @@ export function SideBar({ open }: { open: boolean }) {
   const navigate = useNavigate();
   const license = useLicenseInfo();
   const { user, logout } = useAuth()!;
-  const roles = { superAdmin: "Super Admin", admin: "Admin", user: "User" };
+  const roles = { superadmin: "Super Admin", admin: "Admin", user: "User" };
   const userRole = user?.role || "user";
   const isMobile = useMediaQuery("(max-width: 600px), (max-height: 600px)");
   const logoMap: Record<string, string> = {

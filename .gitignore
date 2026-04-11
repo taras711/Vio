@@ -26,3 +26,5 @@ tools/
 *.njsproj
 *.sln
 *.sw?
+.env
+log.txt

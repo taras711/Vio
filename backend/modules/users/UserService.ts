@@ -61,10 +61,10 @@ export class UserService {
       delete updateData.password;
     }
 
-    await this.db.update("users", id, updateData);
+    await this.db.update("users", { id }, updateData);
   }
 
   async delete(id: string): Promise<void> {
-    await this.db.delete("users", id);
+    await this.db.delete("users", { id });
   }
 }

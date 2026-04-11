@@ -1,4 +1,4 @@
-export type Role = "superAdmin" | "admin" | "user";
+export type Role = "superadmin" | "admin" | "user";
 
 export type Permission =
     | "*"
@@ -15,7 +15,7 @@ export type Permission =
 export interface AuthContext {
   userId: string;
   role: Role;
-  permissions: Permission[];
+  permissions: string[];
   type: string;
   sub: string;
 
