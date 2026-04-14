@@ -13,6 +13,7 @@ dist-ssr
 *.local
 *.pem
 verify-license.js
+server.json
 encode.js
 tools/
 *.md
@@ -28,3 +29,4 @@ tools/
 *.sw?
 .env
 log.txt
+
