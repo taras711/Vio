@@ -12,19 +12,12 @@ export function createAuthenticateMiddleware(auth: AuthService) {
       return res.status(401).json({ error: "Missing token" });
     }
 
-    console.log("AUTH MIDDLEWARE: incoming request", req.path);
-    console.log("AUTH MIDDLEWARE: token =", header);
-
     const token = header.slice("Bearer ".length).trim();
     const ctx = await auth.verifyAccessToken(token);
 
     if (!ctx) {
       return res.status(401).json({ error: "Invalid token" });
     }
-
-    console.log("AUTH MIDDLEWARE: userId =", ctx.sub);
-    console.log("AUTH MIDDLEWARE: permissions =", ctx.permissions);
-    console.log("AUTH MIDDLEWARE: type =", ctx.type);
 
 req.auth = {
   userId: ctx.userId,

@@ -31,10 +31,10 @@ useEffect(() => {
 
 async function login(email: string, password: string) {
   try {
-    const res = await api.post("/auth/login", { email, password });
+    const res = await api.post("http://localhost:3000/api/auth/login", { email, password });
 
     localStorage.setItem("accessToken", res.data.accessToken);
-    localStorage.setItem("refreshToken", res.data.refreshToken);
+    localStorage.setItem("csrf", res.data.csrfToken);
 
     const me = await api.get("/auth/me");
     setUser(me.data);
@@ -51,7 +51,6 @@ async function login(email: string, password: string) {
 
   function logout() {
     localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
     setUser(null);
   }
 

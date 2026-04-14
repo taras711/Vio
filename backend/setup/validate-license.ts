@@ -5,6 +5,7 @@ import { LicenseService } from "../core/license/LicenseService";
 
 const licenseService = new LicenseService();
 
+
 export function createSetupRouter(setupService: any) {
   const router = Router();
 

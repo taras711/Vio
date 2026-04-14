@@ -6,9 +6,11 @@ import express from "express";
 import { LicenseService } from "./core/license/LicenseService";
 import { createAuthenticateMiddleware } from "./api/middleware/authenticate";
 import { JwtAuthService } from "./core/auth/JwtAuthService";
-import { createDatabaseAdapter, DbConfig } from "./core/db/createAdapter";
+import {loadDbConfig} from "./core/db/config/Database";
+import { createDatabaseAdapter } from "./core/db/createAdapter";
 import { SetupService } from "./setup/SetupService";
 import crypto from "crypto";
+import cookieParser from "cookie-parser";
 import { createSetupRouter } from "./setup/SetupController";
 import { createUserModule } from "./modules/users";
 import { ModuleLoader } from "./core/modules/ModuleLoader";
@@ -30,56 +32,81 @@ async function main() {
 
     // CSRF TOKEN GENERATOR – MUSÍ BÝT PRVNÍ
     // ALWAYS attach CSRF token to every JSON response
-    app.use((req, res, next) => {
-        const send = res.json;
-
-        res.json = function (body) {
-            if (!req.headers["x-csrf-token"]) {
-                const csrf = crypto.randomBytes(32).toString("hex");
-                res.setHeader("x-csrf-token", csrf);
-            }
-            return send.call(this, body);
-        };
-
-        next();
-    });
+// app.use((req, res, next) => {
+//     const csrf = crypto.randomBytes(32).toString("hex");
+//     res.setHeader("x-csrf-token", csrf);
+//     next();
+// });
 
 
+    app.use(cookieParser());
     app.use(express.json());
 
     app.use(cors({
         origin: [
-        "https://app.vio.com",
-        "http://localhost:5173"
+            "https://app.vio.com",
+            "http://localhost:5173"
         ],
         credentials: true,
-        methods: ["GET", "POST", "PUT", "DELETE"]
+        methods: ["GET", "POST", "PUT", "DELETE"],
+        allowedHeaders: ["Content-Type", "Authorization", "x-csrf-token"],
+        exposedHeaders: ["x-csrf-token"]
     }));
+
     const setup = new SetupService(null);
 
     console.log("SERVER STARTED");
     console.log("CONFIGURED AT START:", setup.isConfigured());
 
-    app.use((req, res, next) => {
+    function csrfMiddleware(req: express.Request, res: express.Response, next: express.NextFunction) {
         const url = req.originalUrl;
 
+        // výjimky – bez CSRF kontroly
         if (
             url === "/api/auth/login" ||
-            url === "/api/auth/refresh"
+            url === "/api/auth/refresh" ||
+            url === "/api/auth/me" ||
+            url === "/api/status"||
+            url === "/api/setup" ||
+            url === "/api/setup/validate-license" ||
+            url === "/api/setup/test-db"
         ) {
             return next();
         }
 
-        const token = req.headers["x-csrf-token"];
-        if (!token) {
-            return res.status(403).json({ error: "Missing CSRF token" });
+        const csrfCookie = req.cookies?.csrfToken;
+        const csrfHeader = req.headers["x-csrf-token"];
+
+        if (!csrfCookie || !csrfHeader || csrfCookie !== csrfHeader) {
+            return res.status(403).json({ error: "Invalid CSRF token" });
         }
 
         next();
-    });
+    }
+
+    app.use(csrfMiddleware);
+
+
+    // app.use((req, res, next) => {
+    //     const url = req.originalUrl;
+
+    //     if (
+    //         url === "/api/auth/login" ||
+    //         url === "/api/auth/refresh" ||
+    //         url === "/api/auth/me"
+    //     ) {
+    //         return next();
+    //     }
+
+    //     const token = req.headers["x-csrf-token"];
+    //     if (!token) {
+    //         return res.status(403).json({ error: "Missing CSRF token" });
+    //     }
+
+    //     next();
+    // });
 
     app.use((req, res, next) => {
-        console.log("REQ:", req.method, req.path);
         next();
     });
 
@@ -101,7 +128,8 @@ async function main() {
     // -----------------------------
     //  NORMAL MODE ROUTES (mounted ALWAYS)
     // -----------------------------
-    const db = await createDatabaseAdapter(config.database as DbConfig);
+    const dbConfig = loadDbConfig();
+    const db = await createDatabaseAdapter(dbConfig);
     const licenseService = new LicenseService();
     const auth = new JwtAuthService(db, config.security);
     const authenticate = createAuthenticateMiddleware(auth);
@@ -124,9 +152,6 @@ app.use("/api/users", (req, res, next) => {
 
     return createUserRoutes(userController, auth)(req, res, next);
 });
-
-console.log("MOUNTING AUTH CONTROLLER? isConfigured =", setup.isConfigured());
-
     // LICENSE
     app.use("/api/license", (req, res, next) => {
         if (!setup.isConfigured()) return next();
@@ -166,7 +191,7 @@ console.log("MOUNTING AUTH CONTROLLER? isConfigured =", setup.isConfigured());
         res.status(404).json({ error: "not_found" });
     });
 
-    app.listen(3000, () => console.log("Server running on port 3000"));
+    app.listen(3000, () => console.log("Server listening: http://localhost:3000"));
 }
 
 main().catch(err => {

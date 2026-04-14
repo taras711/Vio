@@ -12,30 +12,30 @@ import noAvatar from "@assets/no-avatar.png";
 import { UserCard } from "@ui/primitives/Card";
 import type { UserRow } from "@src/types/users";
 import { ActionPanel } from "@ui/primitives/ActionPanel";
+import { useCallback } from "react";
 
 export function Component() {
   return <UsersPage />;
 }
 
 export default function UsersPage() {
-  const [rows, setRows] = useState<UserRow[]>([]);
   
   const [view, setView] = useState<"grid" | "table">("grid");
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [sort, setSort] = useState(""); 
   const [filter, setFilter] = useState("");
 
-const { data, loading, error } = usePageLoader(async () => {
+
+const loader = useCallback(async () => {
   const res = await UsersService.list();
   return res.data.map((u: any) => ({
+    ...u,
+    id: String(u.id),
+  }));
+}, []); // ← TADY MUSÍ BÝT PRÁZDNÉ POLE
 
-      ...u,
-      id: String(u.id),
-    }));
-  });
-
+  const { data, loading, error } = usePageLoader(loader);
 
     if (loading) return <Loading />;
   if (error) return <div>Error loading users.</div>;

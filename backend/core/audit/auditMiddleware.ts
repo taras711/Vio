@@ -7,7 +7,7 @@ export function audit(action: string, entity: string) {
     async (req: Request, res: Response, next: NextFunction) => {
       const oldJson = res.json;
       const idParam = req.params.id as string | string[] | undefined;
-console.log("AUTH HEADER:", req.headers.authorization);
+      
     const entityId =
       Array.isArray(idParam)
         ? idParam.join(",")

@@ -6,7 +6,8 @@ import bcrypt from "bcryptjs";
 import type { DatabaseAdapter } from "../core/db/DatabaseAdapter";
 
 import path from "path";
-import { createDatabaseAdapter, DbConfig } from "../core/db/createAdapter";
+import { DbConfig } from "../core/db/config/Database";
+import { createDatabaseAdapter } from "../core/db/createAdapter";
 import { runMigrations } from "../core/db/migrate";
 import { decodeBase58ToJson, decodeHumanReadableKey } from "../core/license/licenseKey";
 
@@ -34,8 +35,6 @@ public onConfigured?: () => void;
 
   isConfigured(): boolean {
     if (!fs.existsSync(this.configPath)) return false;
-    console.log("Looking for config at:", this.configPath);
-console.log("Exists:", fs.existsSync(this.configPath));
     try {
       const config = JSON.parse(fs.readFileSync(this.configPath, "utf8"));
       return config.setup?.isConfigured === true;
@@ -61,8 +60,6 @@ console.log("Exists:", fs.existsSync(this.configPath));
     if (!payload.licenseKey) {
       throw new Error("Missing license key");
     }
-
-
 
     // 2) Uložit server.json (zatím isConfigured = false)
     this.updateConfig(payload.database);
