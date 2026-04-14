@@ -1,19 +1,11 @@
 // src/core/ui/pages/login/Page.tsx
 import { LoginForm } from "@ui/primitives/Login";
 import { Box } from "@mui/material";
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 export function Component() {
     return <LoginPage />;
 }
 export function LoginPage() {
-    const navigate = useNavigate();
     
-    useEffect(() => {
-        if (!localStorage.getItem("setupDone")) {
-            navigate("/setup");
-        }
-    }, []);
 
   return (
     <Box

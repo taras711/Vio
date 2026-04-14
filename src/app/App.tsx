@@ -31,18 +31,20 @@ useEffect(() => {
           setSetup(json.setup);
           setDbOk(json.db);
           setLoading(false);
+        } else {
+          setFailed(true);
         }
       })
-      .catch(() => {})
+      .catch(() => setFailed(true))
       .finally(() => {
-        // spinner se zobrazí jen během fetch
         setTimeout(() => setReconnecting(false), 3000);
       });
 
   }, 10000);
 
   return () => clearInterval(interval);
-}, [failed]);
+}, []); // ← TADY! ŽÁDNÉ DEPENDENCIES
+
 
 
  
