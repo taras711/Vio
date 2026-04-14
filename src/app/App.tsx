@@ -16,31 +16,67 @@ export function App() {
   const [loading, setLoading] = useState(true);
   const [setup, setSetup] = useState<boolean | null>(null);
   const [failed, setFailed] = useState(false);
-  const { error } = useActionFeedback();
+  const [dbOk, setDbOk] = useState<boolean | null>(null);
+  const [reconnecting, setReconnecting] = useState(false);
 
-  useEffect(() => {
+useEffect(() => {
+  const interval = setInterval(() => {
+    setReconnecting(true);
+
     fetch("/api/status")
       .then(res => res.json())
       .then(json => {
-        setSetup(json.setup);
-        setLoading(false);
-      })
-      .catch(err => {
-        if (err instanceof SyntaxError && err.message.includes("Unexpected end of JSON input")) {
-          error("Failed to connect to server");
-        } else if (err.response && err.response.status === 502) {
-          error("Failed to connect to server");
-        } else {
-          error(err.message);
+        if (json.server) {
+          setFailed(false);
+          setSetup(json.setup);
+          setDbOk(json.db);
+          setLoading(false);
         }
-        setFailed(true);
-        console.error(failed);
-       });
-  }, []);
+      })
+      .catch(() => {})
+      .finally(() => {
+        // spinner se zobrazí jen během fetch
+        setTimeout(() => setReconnecting(false), 3000);
+      });
+
+  }, 10000);
+
+  return () => clearInterval(interval);
+}, [failed]);
+
 
  
- if (failed) return <NotificationPage message="Failed to connect to server." description="It is not possible to establish a connection. Please try again later"><img style={{marginTop: "40px"}} src={NoConnection} alt="bug" /></NotificationPage>;// ← DŮLEŽITÉ</NotificationPage>;
- if (loading) return <Loading />;
+  if (failed) {
+    return (
+      <NotificationPage
+        message="Failed to connect to server."
+        description="Trying to reconnect…"
+      >
+        <div className="av-logo">
+          <img src={NoConnection} style={{ marginTop: 40 }} />
+          {reconnecting && <div className="av-load"></div>}
+        </div>
+      </NotificationPage>
+    );
+  }
+  if (loading) return <Loading />;
+
+  if (dbOk === false) {
+    return (
+      <NotificationPage
+        message="Database connection failed"
+        description="The server is running, but the database is not available."
+      >
+        <div className="av-logo">
+          <img src={NoConnection} style={{ marginTop: 40 }} />
+            {reconnecting && <div className="av-load"></div>}
+          </div>
+      </NotificationPage>
+    );
+  }
+ if (setup === false) {
+  return <SetupWizard />;
+}
   return (
     <AuthProvider>
       <UIProvider>

@@ -10,6 +10,10 @@ export class MySqlAdapter implements DatabaseAdapter {
     this.pool = mysql.createPool(config);
   }
 
+  async ping(): Promise<void> {
+    await this.pool.query("SELECT 1");
+  }
+
     async raw(query: string, params: any[] = []): Promise<any> {
         const [rows] = await this.pool.query(query, params);
         return rows;

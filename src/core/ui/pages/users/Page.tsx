@@ -29,7 +29,8 @@ export default function UsersPage() {
 
 const loader = useCallback(async () => {
   const res = await UsersService.list();
-  return res.data.map((u: any) => ({
+   const arr = Array.isArray(res.data) ? res.data : [];
+  return arr.map((u: any) => ({
     ...u,
     id: String(u.id),
   }));
@@ -60,7 +61,9 @@ const loader = useCallback(async () => {
       )
     }
   ];
-const filtered = data!
+
+  const safeData = Array.isArray(data) ? data : [];
+const filtered = safeData
   .filter((u: UserRow) => u.name.toLowerCase().includes(search.toLowerCase()))
   .filter((u: UserRow) => (filter ? u.role.includes(filter) : true))
   .sort((a: UserRow, b: UserRow) =>
@@ -108,9 +111,10 @@ return (
 
 function UsersGrid({ data }: { data: UserRow[] }) {
   const navigate = useNavigate();
+  const safe = Array.isArray(data) ? data : [];
   return (
     <div className="grid-layout" style={{ padding: "20px 10px" }}>
-    {data.map((u) => (
+    {safe.map((u) => (
      <UserCard image={u.avatarUrl ?? noAvatar} key={u.id} status={u.isActive ? true : undefined} >
         <Typography variant="h6" sx={{ fontWeight: 600 }}>{u.name}</Typography>
         <Typography variant="body2" sx={{ opacity: 0.7 }}>{u.email}</Typography>

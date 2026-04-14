@@ -9,6 +9,10 @@ export class MongoAdapter implements DatabaseAdapter {
     this.db = client.db(dbName);
   }
 
+  async ping(): Promise<void> {
+    await this.db.command({ ping: 1 });
+  }
+
   async insert<T>(collection: string, data: T): Promise<void> {
     await this.db.collection(collection).insertOne(data as any);
     }

@@ -6,7 +6,7 @@ import { Unplug } from "lucide-react"
 export function NotificationPage({ message, description, children}: {message?: string, description?: string, children?: React.ReactNode}) {
     return (
         <Box className="notification-page">
-            <Box style={{textAlign: "center"}}>
+            <Box style={{textAlign: "center", position: "relative"}}>
                 <Box sx={{ display: "flex", justifyContent: "center", color: "#758c9d;", alignItems: "center", gap: 2 }}>
                     <Unplug />
                     <Typography

@@ -9,6 +9,10 @@ export class FirebirdAdapter implements DatabaseAdapter {
     this.options = options;
   }
 
+  async ping() {
+    await this.raw("SELECT 1 FROM RDB$DATABASE");
+  }
+
   private async connect() {
     return new Promise<any>((resolve, reject) => {
       firebird.attach(this.options, (err, db) => {

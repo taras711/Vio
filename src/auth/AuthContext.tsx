@@ -1,5 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import api from "../utils/api";
+import { useNavigate } from "react-router-dom";
+
 
 interface AuthContextType {
   user: any;
@@ -9,7 +11,7 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
-
+const navigate = useNavigate();
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -18,16 +20,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // načtení uživatele při startu
 useEffect(() => {
   const token = localStorage.getItem("accessToken");
+
   if (!token) {
+    setUser(null);
     setLoading(false);
+    navigate("/login", { replace: true });
     return;
   }
 
   api.get("/auth/me")
-    .then(res => setUser(res.data))
-    .catch(() => setUser(null))
-    .finally(() => setLoading(false));   // ← TADY JE TEN KLÍČ
+    .then(res => {
+      setUser(res.data);
+    })
+    .catch(err => {
+      if (err.response?.status === 401) {
+        // token expiroval nebo je neplatný
+        localStorage.removeItem("accessToken");
+        setUser(null);
+        navigate("/login", { replace: true });
+        return;
+      }
+
+      // jiná chyba
+      console.error(err);
+    })
+    .finally(() => setLoading(false));
 }, []);
+
 
 async function login(email: string, password: string) {
   try {

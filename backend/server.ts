@@ -15,7 +15,6 @@ import { createSetupRouter } from "./setup/SetupController";
 import { createUserModule } from "./modules/users";
 import { ModuleLoader } from "./core/modules/ModuleLoader";
 import { createMachinesModule } from "./modules/machines";
-import configJson from "./config/server.json";
 import { createAuthController } from "./core/auth/AuthController";
 import { createLicenseRouter } from "./api/routes/license";
 import { createAuthRouter } from "./api/routes/auth";
@@ -25,7 +24,15 @@ import { UserController } from "./modules/users/UserController";
 import cors from "cors";
 
 
-const config = configJson;
+import fs from "fs";
+import path from "path";
+
+function loadServerConfig() {
+  const configPath = path.resolve(__dirname, "./config/server.json");
+  if (!fs.existsSync(configPath)) return null;
+  return JSON.parse(fs.readFileSync(configPath, "utf8"));
+}
+const config = loadServerConfig();
 
 async function main() {
     const app = express();
@@ -56,7 +63,6 @@ async function main() {
     const setup = new SetupService(null);
 
     console.log("SERVER STARTED");
-    console.log("CONFIGURED AT START:", setup.isConfigured());
 
     function csrfMiddleware(req: express.Request, res: express.Response, next: express.NextFunction) {
         const url = req.originalUrl;
@@ -86,38 +92,34 @@ async function main() {
 
     app.use(csrfMiddleware);
 
-
-    // app.use((req, res, next) => {
-    //     const url = req.originalUrl;
-
-    //     if (
-    //         url === "/api/auth/login" ||
-    //         url === "/api/auth/refresh" ||
-    //         url === "/api/auth/me"
-    //     ) {
-    //         return next();
-    //     }
-
-    //     const token = req.headers["x-csrf-token"];
-    //     if (!token) {
-    //         return res.status(403).json({ error: "Missing CSRF token" });
-    //     }
-
-    //     next();
-    // });
-
     app.use((req, res, next) => {
         next();
     });
 
     // Always available
-    app.get("/api/status", (req, res) => {
-        res.json({ setup: setup.isConfigured() });
+    // ALWAYS: status + setup
+    app.get("/api/status", async (req, res) => {
+        const isConfigured = setup.isConfigured();
+        let dbOk = false;
+
+        if (isConfigured) {
+            try {
+            const dbConfig = loadDbConfig();
+            const db = await createDatabaseAdapter(dbConfig);
+            await db.ping();
+            dbOk = true;
+            } catch {
+            dbOk = false;
+            }
+        }
+
+        res.json({
+            server: true,
+            setup: isConfigured,
+            db: dbOk
+        });
     });
 
-    // -----------------------------
-    //  SETUP ROUTES
-    // -----------------------------
     app.use("/api/setup", (req, res, next) => {
         if (!setup.isConfigured()) {
             return createSetupRouter(setup)(req, res, next);
@@ -125,34 +127,41 @@ async function main() {
         next();
     });
 
+    let db: any = null;
+    let auth: JwtAuthService | null = null;
+
+
     // -----------------------------
     //  NORMAL MODE ROUTES (mounted ALWAYS)
     // -----------------------------
-    const dbConfig = loadDbConfig();
-    const db = await createDatabaseAdapter(dbConfig);
+
+try {
+  const dbConfig = loadDbConfig();
+  db = await createDatabaseAdapter(dbConfig);
+
+  const config = loadServerConfig();
+  if (!config) {
+    console.warn("No server.json config, running without normal routes.");
+  } else {
     const licenseService = new LicenseService();
-    const auth = new JwtAuthService(db, config.security);
+    auth = new JwtAuthService(db, config.security);
     const authenticate = createAuthenticateMiddleware(auth);
 
-// AUTH ROUTER – login + refresh
-app.use("/api/auth", createAuthRouter(auth));
+    app.use("/api/auth", createAuthRouter(auth));
 
-// AUTH CONTROLLER – me, permissions, audit
-// AUTH CONTROLLER – me, permissions, audit
-app.use("/api/auth", (req, res, next) => {
-    if (!setup.isConfigured()) return next();
-    return createAuthController(db, config, licenseService)(req, res, next);
-});
-// USERS MODULE
-app.use("/api/users", (req, res, next) => {
-    if (!setup.isConfigured()) return next();
+    app.use("/api/auth", (req, res, next) => {
+      if (!setup.isConfigured()) return next();
+      return createAuthController(db, config, licenseService)(req, res, next);
+    });
 
-    const userService = new UserService(db, licenseService);
-    const userController = new UserController(userService);
+    app.use("/api/users", (req, res, next) => {
+      if (!setup.isConfigured()) return next();
+      const userService = new UserService(db, licenseService);
+      const userController = new UserController(userService);
+      return createUserRoutes(userController, auth!)(req, res, next);
+    });
 
-    return createUserRoutes(userController, auth)(req, res, next);
-});
-    // LICENSE
+     // LICENSE
     app.use("/api/license", (req, res, next) => {
         if (!setup.isConfigured()) return next();
         return createLicenseRouter(licenseService)(req, res, next);
@@ -176,6 +185,16 @@ app.use("/api/users", (req, res, next) => {
             return authenticate(req, res, () => mod.routes(req, res, next));
         });
     }
+  }
+} catch (err: unknown) {
+  if (err instanceof Error) {
+    console.error("DB init failed, running in degraded mode:", err.message);
+  } else {
+    console.error("DB init failed, running in degraded mode:", err);
+  }
+}
+
+   
 
     // -----------------------------
     //  FALLBACK

@@ -23,6 +23,10 @@ export class PostgresAdapter implements DatabaseAdapter {
     });
   }
 
+  async ping(): Promise<void> {
+    await this.pool.query("SELECT 1");
+  }
+
   async find<T>(table: string, query: object): Promise<T[]> {
     const keys = Object.keys(query);
     const values = Object.values(query);

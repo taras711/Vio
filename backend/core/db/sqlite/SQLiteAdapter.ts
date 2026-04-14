@@ -9,6 +9,10 @@ export class SQLiteAdapter implements DatabaseAdapter {
     this.db = new Database(filePath);
   }
 
+  async ping(): Promise<void> {
+    await this.db.exec("PRAGMA user_version;");
+  }
+
 async raw(query: string, params: any[] = []): Promise<any> {
   const stmt = this.db.prepare(query);
   const upper = query.trim().toUpperCase();

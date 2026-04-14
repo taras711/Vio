@@ -2,7 +2,8 @@
 
 export interface DatabaseAdapter {
   type: "postgres" | "mysql" | "mongo" | "firebird" | "sqlite";
-
+  
+  ping(): Promise<void>;
   find<T>(table: string, query: Record<string, any>): Promise<T[]>;
   findOne<T>(table: string, query: Record<string, any>): Promise<T | null>;
   insert<T extends Record<string, any>>(table: string, data: T): Promise<void>;
