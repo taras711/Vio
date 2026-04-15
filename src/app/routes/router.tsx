@@ -6,6 +6,8 @@ import type { RouteHandle } from "./types";
 import { ProtectedRoute } from "./ProtectedRoute";
 import { Component as LoginPage } from "@pages/login/Page";
 import { SetupWizard } from "@features/setup/SetupWizard";
+import { PublicRoute } from "./PublicRoute";
+import { SetupRoute } from "./SetupRoute";
 
 const pageModules = import.meta.glob("/src/core/ui/pages/**/Page.tsx", { eager: false });
 
@@ -15,11 +17,11 @@ export const router = createBrowserRouter([
   // PUBLIC ROUTES
   {
     path: "/login",
-    element: <LoginPage />,
+    element: <PublicRoute><LoginPage /></PublicRoute>,
   },
   {
     path: "/setup",
-    element: <SetupWizard />,
+    element: <SetupRoute><SetupWizard /></SetupRoute>,
   },
 
   // PROTECTED ROUTES

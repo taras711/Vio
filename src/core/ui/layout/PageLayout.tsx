@@ -55,7 +55,6 @@ const params = matches.at(-1)?.params ?? {};
   const isMobile = useMediaQuery("(max-width: 600px), (max-height: 600px)");
 
   const SIDEBAR_WIDTH = sidebarOpen ? 255 : 117;
-console.log("ROUTES:", router.routes);
 
 
   // Swipe gestures (mobile only)

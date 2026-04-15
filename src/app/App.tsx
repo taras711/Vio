@@ -20,32 +20,38 @@ export function App() {
   const [reconnecting, setReconnecting] = useState(false);
 
 useEffect(() => {
-  const interval = setInterval(() => {
+  let cancelled = false;
+
+  async function checkStatus() {
     setReconnecting(true);
-
-    fetch("/api/status")
-      .then(res => res.json())
-      .then(json => {
-        if (json.server) {
-          setFailed(false);
-          setSetup(json.setup);
-          setDbOk(json.db);
-          setLoading(false);
-        } else {
-          setFailed(true);
-        }
-      })
-      .catch(() => setFailed(true))
-      .finally(() => {
+    try {
+      const res = await fetch("/api/status").finally(() => {
         setTimeout(() => setReconnecting(false), 3000);
-      });
+      });;
+      const json = await res.json();
 
-  }, 10000);
+      if (cancelled) return;
 
-  return () => clearInterval(interval);
-}, []); // ← TADY! ŽÁDNÉ DEPENDENCIES
+      setFailed(!json.server);
+      setSetup(json.setup);
+      setDbOk(json.db);
+      setLoading(false);
+    } catch {
+      if (!cancelled) setFailed(true);
+    }
+  }
 
+  // 🔥 1) Okamžitý první request
+  checkStatus();
 
+  // 🔥 2) Interval pro další requesty
+  const interval = setInterval(checkStatus, 10000);
+
+  return () => {
+    cancelled = true;
+    clearInterval(interval);
+  };
+}, []);
 
  
   if (failed) {

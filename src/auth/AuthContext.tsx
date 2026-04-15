@@ -36,9 +36,6 @@ useEffect(() => {
     .finally(() => setLoading(false));
 }, []);
 
-
-
-
 async function login(email: string, password: string) {
   try {
     const res = await api.post("http://localhost:3000/api/auth/login", { email, password });

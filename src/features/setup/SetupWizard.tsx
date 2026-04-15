@@ -15,9 +15,6 @@ export function SetupWizard() {
   const [licenseKey, setLicenseKey] = useState("");
   const [licenseError, setLicenseError] = useState("");
 
-
-
-
   type DbConfig =
   | {
       type: "postgres" | "mysql";
