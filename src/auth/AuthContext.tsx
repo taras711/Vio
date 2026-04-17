@@ -45,7 +45,6 @@ useEffect(() => {
 
 
   function logout() {
-    localStorage.removeItem("accessToken");
     setUser(null);
   }
 

@@ -9,15 +9,11 @@ const api = axios.create({
 
 
 api.interceptors.request.use((config) => {
-  const csrf = Cookies.get("csrf_token"); // název cookie z backendu
-  const access = localStorage.getItem("accessToken");
+const csrf = Cookies.get("csrfToken");
+if (csrf) config.headers["x-csrf-token"] = csrf;
 
   if (csrf) {
     config.headers["x-csrf-token"] = csrf;
-  }
-
-  if (access) {
-    config.headers["Authorization"] = "Bearer " + access;
   }
 
   return config;
@@ -66,8 +62,6 @@ api.interceptors.response.use(
 
       const newAccess = res.data.accessToken;
 
-      localStorage.setItem("accessToken", newAccess);
-
       // probudíme čekající requesty
       queue.forEach((p) => p.resolve(newAccess));
       queue = [];
@@ -82,8 +76,8 @@ api.interceptors.response.use(
       queue = [];
       isRefreshing = false;
 
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
+      Cookies.remove("accessToken");
+      Cookies.remove("refreshToken");
 
       // ❌ window.location.href = "/login";
       // ✔ nech to na ProtectedRoute

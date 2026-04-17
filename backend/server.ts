@@ -24,6 +24,7 @@ import { UserController } from "./modules/users/UserController";
 import cors from "cors";
 import helmet from "helmet";
 import timeout from "connect-timeout";
+import csurf from "csurf";
 
 
 
@@ -36,7 +37,15 @@ function loadServerConfig() {
   return JSON.parse(fs.readFileSync(configPath, "utf8"));
 }
 const config = loadServerConfig();
-
+const csrfProtection = csurf({
+  cookie: {
+    key: "csrfToken",
+    httpOnly: false,     // FE musí token přečíst
+    secure: false,       // v produkci true
+    sameSite: "strict",
+    path: "/"
+  }
+});
 async function main() {
     const app = express();
 
@@ -85,33 +94,33 @@ async function main() {
 
     console.log("SERVER STARTED");
 
-    function csrfMiddleware(req: express.Request, res: express.Response, next: express.NextFunction) {
-        const url = req.originalUrl;
+    // function csrfMiddleware(req: express.Request, res: express.Response, next: express.NextFunction) {
+    //     const url = req.originalUrl;
 
-        // výjimky – bez CSRF kontroly
-        if (
-            url === "/api/auth/login" ||
-            url === "/api/auth/refresh" ||
-            url === "/api/auth/me" ||
-            url === "/api/status"||
-            url === "/api/setup" ||
-            url === "/api/setup/validate-license" ||
-            url === "/api/setup/test-db"
-        ) {
-            return next();
-        }
+    //     // výjimky – bez CSRF kontroly
+    //     if (
+    //         url === "/api/auth/login" ||
+    //         url === "/api/auth/refresh" ||
+    //         url === "/api/auth/me" ||
+    //         url === "/api/status"||
+    //         url === "/api/setup" ||
+    //         url === "/api/setup/validate-license" ||
+    //         url === "/api/setup/test-db"
+    //     ) {
+    //         return next();
+    //     }
 
-        const csrfCookie = req.cookies?.csrfToken;
-        const csrfHeader = req.headers["x-csrf-token"];
+    //     const csrfCookie = req.cookies?.csrf_token;
+    //     const csrfHeader = req.headers["x-csrf-token"];
 
-        if (!csrfCookie || !csrfHeader || csrfCookie !== csrfHeader) {
-            return res.status(403).json({ error: "Invalid CSRF token" });
-        }
+    //     if (!csrfCookie || !csrfHeader || csrfCookie !== csrfHeader) {
+    //         return res.status(403).json({ error: "Invalid CSRF token" });
+    //     }
 
-        next();
-    }
+    //     next();
+    // }
 
-    app.use(csrfMiddleware);
+    // app.use(csrfMiddleware);
 
     app.use((req, res, next) => {
   res.setHeader(
@@ -175,12 +184,36 @@ try {
 
     
 
-    app.use("/api/auth", (req, res, next) => {
-      if (!setup.isConfigured()) return next();
-      return createAuthController(db, config, licenseService)(req, res, next);
-    });
+// LOGIN + REFRESH (bez CSRF)
+app.use("/api/auth", createAuthRouter(auth));
 
-    app.use("/api/auth", createAuthRouter(auth));
+// CSRF PROTECTION – musí být až po login/refresh
+app.use(csurf({
+  cookie: {
+    key: "csrfToken",
+    httpOnly: false,
+    secure: false,
+    sameSite: "strict",
+    path: "/"
+  }
+}));
+
+// POSÍLÁME CSRF TOKEN DO HLAVIČKY KAŽDÉ ODPOVĚDI
+app.use((req, res, next) => {
+  try {
+    res.setHeader("x-csrf-token", req.csrfToken());
+  } catch (_) {
+    // GET/HEAD/OPTIONS nemají csrfToken → ignorujeme
+  }
+  next();
+});
+
+// OSTATNÍ AUTH ROUTY (chráněné CSRF)
+app.use("/api/auth", (req, res, next) => {
+  if (!setup.isConfigured()) return next();
+  return createAuthController(db, config, licenseService)(req, res, next);
+});
+
 
     app.use("/api/users", (req, res, next) => {
       if (!setup.isConfigured()) return next();

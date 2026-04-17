@@ -12,7 +12,7 @@ export function createAuthenticateMiddleware(auth: AuthService) {
       return res.status(401).json({ error: "Missing token" });
     }
 
-    const token = header.slice("Bearer ".length).trim();
+    const token = req.cookies?.accessToken;
     const ctx = await auth.verifyAccessToken(token);
 
     if (!ctx) {
