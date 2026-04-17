@@ -1,6 +1,8 @@
 import { Pool } from "pg"; // npm install pg @types/pg
 import type { DatabaseAdapter } from "../DatabaseAdapter";
+import { TABLES, type TableName } from "../schema/tables";
 
+const ALLOWED_TABLES = new Set(Object.values(TABLES));
 interface DbConfig {
   host: string;
   port: number;
@@ -28,6 +30,9 @@ export class PostgresAdapter implements DatabaseAdapter {
   }
 
   async find<T>(table: string, query: object): Promise<T[]> {
+    if (!ALLOWED_TABLES.has(table as TableName)) {
+      throw new Error(`Table "${table}" is not allowed.`);
+    }
     const keys = Object.keys(query);
     const values = Object.values(query);
 
@@ -40,11 +45,17 @@ export class PostgresAdapter implements DatabaseAdapter {
   }
 
     async findOne<T>(table: string, query: object): Promise<T | null> {
+    if (!ALLOWED_TABLES.has(table as TableName)) {
+      throw new Error(`Table "${table}" is not allowed.`);
+    }
         const rows = await this.find<T>(table, query);
         return rows[0] ?? null;
     }
 
     async insert<T>(table: string, data: T): Promise<void> {
+    if (!ALLOWED_TABLES.has(table as TableName)) {
+      throw new Error(`Table "${table}" is not allowed.`);
+    }
         const obj = data as Record<string, any>;
         const keys = Object.keys(obj);
         const values = Object.values(obj);
@@ -62,12 +73,18 @@ export class PostgresAdapter implements DatabaseAdapter {
     }
 
     async findById<T>(table: string, id: string): Promise<T | null> {
+        if (!ALLOWED_TABLES.has(table as TableName)) {
+            throw new Error(`Table "${table}" is not allowed.`);
+        }
         const sql = `SELECT * FROM "${table}" WHERE "id" = $1`;
         const result = await this.pool.query(sql, [id]);
         return result.rows[0] ?? null;
     }
 
     async findByEmail<T>(table: string, email: string): Promise<T | null> {
+        if (!ALLOWED_TABLES.has(table as TableName)) {
+            throw new Error(`Table "${table}" is not allowed.`);
+        }
         const sql = `SELECT * FROM "${table}" WHERE "email" = $1`;
         const result = await this.pool.query(sql, [email]);
         return result.rows[0] ?? null;
@@ -78,6 +95,9 @@ async update<T extends Record<string, any>>(
   query: Record<string, any>,
   data: Partial<T>
 ): Promise<void> {
+  if (!ALLOWED_TABLES.has(table as TableName)) {
+    throw new Error(`Table "${table}" is not allowed.`);
+  }
   const setKeys = Object.keys(data);
   const setValues = Object.values(data);
 
@@ -97,6 +117,9 @@ async update<T extends Record<string, any>>(
 }
 
 async delete(table: string, query: Record<string, any>): Promise<void> {
+  if (!ALLOWED_TABLES.has(table as TableName)) {
+    throw new Error(`Table "${table}" is not allowed.`);
+  }
   const whereKeys = Object.keys(query);
   const whereValues = Object.values(query);
 

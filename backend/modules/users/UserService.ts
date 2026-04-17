@@ -4,23 +4,24 @@ import { randomUUID } from "crypto";
 import type { DatabaseAdapter } from "../../core/db/DatabaseAdapter";
 import type { LicenseService } from "../../core/license/LicenseService";
 import type { CreateUserDto, UpdateUserDto, User } from "./UserTypes";
-
+import { TABLES } from "../../core/db/schema/tables";
 export class UserService {
   constructor(
     private db: DatabaseAdapter,
     private license: LicenseService
   ) {}
 
-  async getAll(): Promise<User[]> {
-    return this.db.find<User>("users", {});
+  async getAll(page = 1, limit = 50): Promise<User[]> {
+    const offset = (page - 1) * limit;
+    return this.db.find<User>(TABLES.users, {}, { limit, offset });
   }
 
   async getById(id: string): Promise<User | null> {
-    return this.db.findOne<User>("users", { id });
+    return this.db.findOne<User>(TABLES.users, { id });
   }
 
   findByEmail(email: string): Promise<User | null> {
-    return this.db.findOne<User>("users", { email });
+    return this.db.findOne<User>(TABLES.users, { email });
   }
 
   // ✔ přidáme alias, aby fungovalo userService.findById()
@@ -49,7 +50,7 @@ export class UserService {
       isActive: true
     };
 
-    await this.db.insert("users", user);
+    await this.db.insert(TABLES.users, user);
     return user;
   }
 
@@ -61,10 +62,10 @@ export class UserService {
       delete updateData.password;
     }
 
-    await this.db.update("users", { id }, updateData);
+    await this.db.update(TABLES.users, { id }, updateData);
   }
 
   async delete(id: string): Promise<void> {
-    await this.db.delete("users", { id });
+    await this.db.delete(TABLES.users, { id });
   }
 }

@@ -1,16 +1,16 @@
 import { randomUUID } from "crypto";
 import type { DatabaseAdapter } from "../../core/db/DatabaseAdapter";
 import type { CreateMachineDto, UpdateMachineDto, Machine } from "./MachineTypes";
-
+import { TABLES } from "../../core/db/schema/tables";
 export class MachineService {
   constructor(private db: DatabaseAdapter) {}
 
   async getAll(): Promise<Machine[]> {
-    return this.db.find<Machine>("machines", {});
+    return this.db.find<Machine>(TABLES.machines, {});
   }
 
   async getById(id: string): Promise<Machine | null> {
-    return this.db.findOne<Machine>("machines", { id });
+    return this.db.findOne<Machine>(TABLES.machines, { id });
   }
 
   async create(dto: CreateMachineDto): Promise<Machine> {
@@ -25,18 +25,18 @@ export class MachineService {
       updatedAt: new Date().toISOString()
     };
 
-    await this.db.insert("machines", machine);
+    await this.db.insert(TABLES.machines, machine);
     return machine;
   }
 
   async update(id: string, dto: UpdateMachineDto): Promise<void> {
-    await this.db.update("machines", { id }, {
+    await this.db.update(TABLES.machines, { id }, {
       ...dto,
       updatedAt: new Date().toISOString()
     });
   }
 
   async delete(id: string): Promise<void> {
-    await this.db.delete("machines", { id });
+    await this.db.delete(TABLES.machines, { id });
   }
 }

@@ -10,7 +10,7 @@ import { DbConfig } from "../core/db/config/Database";
 import { createDatabaseAdapter } from "../core/db/createAdapter";
 import { runMigrations } from "../core/db/migrate";
 import { decodeBase58ToJson, decodeHumanReadableKey } from "../core/license/licenseKey";
-
+import { TABLES } from "../core/db/schema/tables";
 
 interface SetupPayload {
   email: string;
@@ -102,7 +102,7 @@ private updateConfig(dbConfig: any) {
     const now = Date.now(); // ms
     const hash = await bcrypt.hash(password, 12);
 
-  await this.db.insert("users", {
+  await this.db.insert(TABLES.users, {
     email,
     name,
     passwordHash: hash,

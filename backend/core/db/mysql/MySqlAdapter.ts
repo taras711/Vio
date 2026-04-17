@@ -1,7 +1,9 @@
 // db/mysql/MySqlAdapter.ts
 import { DatabaseAdapter } from "../DatabaseAdapter";
 import mysql from "mysql2/promise"; // npm install mysql2 @types/mysql2
+import { TABLES, type TableName } from "../schema/tables";
 
+const ALLOWED_TABLES = new Set(Object.values(TABLES));
 export class MySqlAdapter implements DatabaseAdapter {
   private pool;
   readonly type = "mysql";
@@ -20,14 +22,23 @@ export class MySqlAdapter implements DatabaseAdapter {
     }
 
   findById<T>(table: string, id: string): Promise<T | null> {
+    if (!ALLOWED_TABLES.has(table as TableName)) {
+      throw new Error(`Table "${table}" is not allowed.`);
+    }
     return this.findOne<T>(table, { id });
   }
 
   findByEmail<T>(table: string, email: string): Promise<T | null> {
+    if (!ALLOWED_TABLES.has(table as TableName)) {
+      throw new Error(`Table "${table}" is not allowed.`);
+    }
     return this.findOne<T>(table, { email });
   }
 
-async find<T>(table: string, query: any): Promise<T[]> {
+async find<T>(table: string, query: any, options?: { limit?: number; offset?: number }): Promise<T[]> {
+  if (!ALLOWED_TABLES.has(table as TableName)) {
+    throw new Error(`Table "${table}" is not allowed.`);
+  }
   let sql = `SELECT * FROM \`${table}\``;
   const params: any[] = [];
 
@@ -39,17 +50,30 @@ async find<T>(table: string, query: any): Promise<T[]> {
     sql += ` WHERE ${where}`;
     params.push(...Object.values(query));
   }
+  if (options?.limit !== undefined) {
+    sql += ` LIMIT ${options.limit}`;
+  }
+
+  if (options?.offset !== undefined) {
+    sql += ` OFFSET ${options.offset}`;
+  }
 
   const [rows] = await this.pool.query(sql, params);
   return rows as T[];
 }
 
 async findOne<T>(table: string, query: any): Promise<T | null> {
+  if (!ALLOWED_TABLES.has(table as TableName)) {
+    throw new Error(`Table "${table}" is not allowed.`);
+  }
   const rows = await this.find<T>(table, query);
   return rows[0] ?? null;
 }
 
 async insert<T extends Record<string, any>>(table: string, data: T): Promise<void> {
+  if (!ALLOWED_TABLES.has(table as TableName)) {
+    throw new Error(`Table "${table}" is not allowed.`);
+  }
   const keys = Object.keys(data);
   const values = Object.values(data);
 
@@ -68,6 +92,9 @@ async update<T extends Record<string, any>>(
   query: Record<string, any>,
   data: Partial<T>
 ): Promise<void> {
+  if (!ALLOWED_TABLES.has(table as TableName)) {
+    throw new Error(`Table "${table}" is not allowed.`);
+  }
   const setKeys = Object.keys(data);
   const setValues = Object.values(data);
 
@@ -84,6 +111,9 @@ async update<T extends Record<string, any>>(
 
 
 async delete(table: string, query: Record<string, any>): Promise<void> {
+  if (!ALLOWED_TABLES.has(table as TableName)) {
+    throw new Error(`Table "${table}" is not allowed.`);
+  }
   const whereKeys = Object.keys(query);
   const whereValues = Object.values(query);
 

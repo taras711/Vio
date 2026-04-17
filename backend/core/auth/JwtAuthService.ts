@@ -9,6 +9,7 @@ import type { DatabaseAdapter } from "../db/DatabaseAdapter";
 import { RolePermissions } from "./RolePermissions";
 import fs from "fs";
 import path from "path";
+import { TABLES } from "../db/schema/tables";
 
 interface JwtAuthConfig {
   jwtPrivateKey: string;
@@ -35,6 +36,7 @@ export class JwtAuthService implements AuthService {
   // In-memory cache pro nejčerstvěji odvolané tokeny (pouze jako optimalizace,
   // nikoli jako náhrada DB). Vyčistí se při restartu, ale DB zůstane.
   private revokedCache = new Set<string>();
+  private revokedAccessCache = new Set<string>(); // jti access tokenů
 
   constructor(db: DatabaseAdapter, config: JwtAuthConfig) {
     this.db = db;
@@ -132,10 +134,9 @@ export class JwtAuthService implements AuthService {
     const payload = this.verifyToken(token);
     if (!payload || payload.type !== "access") return null;
 
-    // Access tokeny jsou krátké (15 min) — pro ně stačí cache, DB kontrola
-    // by zbytečně zatížila každý request. Pokud potřebuješ okamžité odvolání
-    // i access tokenů, odkomentuj řádek níže.
-    // if (await this.isTokenRevoked(payload.jti)) return null;
+    if (payload.jti && this.revokedAccessCache.has(payload.jti)) {
+      return null;
+    }
 
     return {
       userId: String(payload.sub),
@@ -152,6 +153,10 @@ export class JwtAuthService implements AuthService {
     await this.revokeToken(payload.jti, payload.exp);
   }
 
+  revokeAccessToken(jti: string) {
+    this.revokedAccessCache.add(jti);
+  }
+
   // ── PRIVATE HELPERS ────────────────────────────────────────────────────────
 
   private async isTokenRevoked(jti: string): Promise<boolean> {
@@ -159,7 +164,7 @@ export class JwtAuthService implements AuthService {
     if (this.revokedCache.has(jti)) return true;
 
     // Plná kontrola v DB (přežije restart)
-    const row = await this.db.findOne<{ jti: string }>("revoked_tokens", { jti });
+    const row = await this.db.findOne<{ jti: string }>(TABLES.revoked_tokens, { jti });
     if (row) {
       this.revokedCache.add(jti); // přidej do cache pro příští dotaz
       return true;
@@ -173,7 +178,7 @@ export class JwtAuthService implements AuthService {
     // exp je unix timestamp v sekundách → převedeme na ms
     const expiresAt = exp ? exp * 1000 : now + this.config.refreshTokenTtlSeconds * 1000;
 
-    await this.db.insert("revoked_tokens", {
+    await this.db.insert(TABLES.revoked_tokens, {
       jti,
       revokedAt: now,
       expiresAt,
@@ -185,7 +190,7 @@ export class JwtAuthService implements AuthService {
   private async cleanExpiredTokens(): Promise<void> {
     try {
       await this.db.raw(
-        `DELETE FROM revoked_tokens WHERE expiresAt < ?`,
+        `DELETE FROM ${TABLES.revoked_tokens} WHERE expiresAt < ?`,
         [Date.now()]
       );
       // Vyčisti i cache — expirované tokeny JWT library stejně odmítne
@@ -217,11 +222,11 @@ export class JwtAuthService implements AuthService {
   }
 
   private async findUserByEmail(email: string): Promise<User | null> {
-    const users = await this.db.find<User>("users", { email });
+    const users = await this.db.find<User>(TABLES.users, { email });
     return users[0] ?? null;
   }
 
   private async findUserById(id: string): Promise<User | null> {
-    return this.db.findOne<User>("users", { id });
+    return this.db.findOne<User>(TABLES.users, { id });
   }
 }

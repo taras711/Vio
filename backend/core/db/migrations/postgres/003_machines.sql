@@ -11,5 +11,5 @@ CREATE TABLE IF NOT EXISTS machines (
   lastSeenAt TEXT,
   firmwareVersion VARCHAR(255),
   ownerUserId VARCHAR(36),
-  tags TEXT,
+  tags TEXT
 );

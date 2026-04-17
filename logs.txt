@@ -1,0 +1,559 @@
+// core/auth/JwtAuthService.ts
+import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
+import crypto from "crypto";
+import type { AuthService } from "./AuthService";
+import type { Role, Permission, AuthContext } from "./types";
+import type { User } from "../users/types";
+import type { DatabaseAdapter } from "../db/DatabaseAdapter";
+import { RolePermissions } from "./RolePermissions";
+import fs from "fs";
+import path from "path";
+import { TABLES } from "../db/schema/tables";
+
+interface JwtAuthConfig {
+  jwtPrivateKey: string;
+  jwtPublicKey: string;
+  accessTokenTtlSeconds: number;
+  refreshTokenTtlSeconds: number;
+}
+
+interface JwtPayload {
+  sub: string;
+  role: string;
+  permissions?: string[];
+  type: "access" | "refresh";
+  jti: string;       // ← každý token má unikátní ID — tohle ukládáme do DB
+  exp?: number;      // JWT standard claim (unix timestamp)
+}
+
+export class JwtAuthService implements AuthService {
+  private db: DatabaseAdapter;
+  private config: JwtAuthConfig;
+  private privateKey: string;
+  private publicKey: string;
+
+  // In-memory cache pro nejčerstvěji odvolané tokeny (pouze jako optimalizace,
+  // nikoli jako náhrada DB). Vyčistí se při restartu, ale DB zůstane.
+  private revokedCache = new Set<string>();
+  private revokedAccessCache = new Set<string>(); // jti access tokenů
+
+  constructor(db: DatabaseAdapter, config: JwtAuthConfig) {
+    this.db = db;
+    this.config = config;
+
+    this.privateKey = fs.readFileSync(
+      path.resolve(process.cwd(), this.config.jwtPrivateKey),
+      "utf8"
+    );
+    this.publicKey = fs.readFileSync(
+      path.resolve(process.cwd(), this.config.jwtPublicKey),
+      "utf8"
+    );
+
+    // Pravidelně mazat expirované záznamy z DB (každou hodinu)
+    setInterval(() => this.cleanExpiredTokens(), 60 * 60 * 1000);
+  }
+
+  // ── LOGIN ──────────────────────────────────────────────────────────────────
+
+  async login(email: string, password: string) {
+    const user = await this.findUserByEmail(email);
+
+    if (!user) throw new Error("USER_NOT_FOUND");
+    if (!user.isActive) throw new Error("USER_INACTIVE");
+
+    const ok = await bcrypt.compare(password, user.passwordHash);
+    if (!ok) throw new Error("INVALID_PASSWORD");
+
+    const permissions = this.getPermissions(user.role);
+
+    const accessToken = this.signToken({
+      sub: String(user.id),
+      role: user.role,
+      permissions,
+      type: "access",
+      jti: crypto.randomUUID(),
+    }, this.config.accessTokenTtlSeconds);
+
+    const refreshToken = this.signToken({
+      sub: String(user.id),
+      role: user.role,
+      type: "refresh",
+      jti: crypto.randomUUID(),
+    }, this.config.refreshTokenTtlSeconds);
+
+    return { accessToken, refreshToken };
+  }
+
+  // ── REFRESH ────────────────────────────────────────────────────────────────
+
+  async refresh(refreshToken: string) {
+    const payload = this.verifyToken(refreshToken);
+    if (!payload || payload.type !== "refresh") {
+      throw new Error("Invalid refresh token");
+    }
+
+    // Zkontroluj DB (přežije restart serveru)
+    const isRevoked = await this.isTokenRevoked(payload.jti);
+    if (isRevoked) {
+      throw new Error("Refresh token revoked");
+    }
+
+    const user = await this.findUserById(payload.sub);
+    if (!user || !user.isActive) {
+      throw new Error("User not found or inactive");
+    }
+
+    // Odvolej starý token (token rotation)
+    await this.revokeToken(payload.jti, payload.exp);
+
+    const permissions = this.getPermissions(user.role);
+
+    const newAccessToken = this.signToken({
+      sub: String(user.id),
+      role: user.role,
+      permissions,
+      type: "access",
+      jti: crypto.randomUUID(),
+    }, this.config.accessTokenTtlSeconds);
+
+    const newRefreshToken = this.signToken({
+      sub: String(user.id),
+      role: user.role,
+      type: "refresh",
+      jti: crypto.randomUUID(),
+    }, this.config.refreshTokenTtlSeconds);
+
+    return { accessToken: newAccessToken, refreshToken: newRefreshToken };
+  }
+
+  // ── VERIFY ─────────────────────────────────────────────────────────────────
+
+  async verifyAccessToken(token: string): Promise<AuthContext | null> {
+    const payload = this.verifyToken(token);
+    if (!payload || payload.type !== "access") return null;
+
+    if (payload.jti && this.revokedAccessCache.has(payload.jti)) {
+      return null;
+    }
+
+    return {
+      userId: String(payload.sub),
+      role: payload.role as Role,
+      permissions: (payload.permissions ?? []) as string[],
+      type: payload.type,
+      sub: String(payload.sub),
+    };
+  }
+
+  async revokeRefreshToken(token: string): Promise<void> {
+    const payload = this.verifyToken(token);
+    if (!payload) return;
+    await this.revokeToken(payload.jti, payload.exp);
+  }
+
+  revokeAccessToken(jti: string) {
+    this.revokedAccessCache.add(jti);
+  }
+
+  // ── PRIVATE HELPERS ────────────────────────────────────────────────────────
+
+  private async isTokenRevoked(jti: string): Promise<boolean> {
+    // Rychlá kontrola v cache (vyhne se DB na čerstvě odvolané tokeny)
+    if (this.revokedCache.has(jti)) return true;
+
+    // Plná kontrola v DB (přežije restart)
+    const row = await this.db.findOne<{ jti: string }>(TABLES.revoked_tokens, { jti });
+    if (row) {
+      this.revokedCache.add(jti); // přidej do cache pro příští dotaz
+      return true;
+    }
+
+    return false;
+  }
+
+  private async revokeToken(jti: string, exp?: number): Promise<void> {
+    const now = Date.now();
+    // exp je unix timestamp v sekundách → převedeme na ms
+    const expiresAt = exp ? exp * 1000 : now + this.config.refreshTokenTtlSeconds * 1000;
+
+    await this.db.insert(TABLES.revoked_tokens, {
+      jti,
+      revokedAt: now,
+      expiresAt,
+    });
+
+    this.revokedCache.add(jti);
+  }
+
+  private async cleanExpiredTokens(): Promise<void> {
+    try {
+      await this.db.raw(
+        `DELETE FROM ${TABLES.revoked_tokens} WHERE expiresAt < ?`,
+        [Date.now()]
+      );
+      // Vyčisti i cache — expirované tokeny JWT library stejně odmítne
+      this.revokedCache.clear();
+    } catch (err) {
+      console.error("Failed to clean expired revoked tokens:", err);
+    }
+  }
+
+  private getPermissions(role: Role): Permission[] {
+    return role === "superadmin" ? ["*"] : RolePermissions[role];
+  }
+
+  private signToken(payload: JwtPayload, ttlSeconds: number): string {
+    return jwt.sign(payload, this.privateKey, {
+      algorithm: "RS256",
+      expiresIn: ttlSeconds,
+    });
+  }
+
+  private verifyToken(token: string): JwtPayload | null {
+    try {
+      return jwt.verify(token, this.publicKey, {
+        algorithms: ["RS256"],
+      }) as JwtPayload;
+    } catch {
+      return null;
+    }
+  }
+
+  private async findUserByEmail(email: string): Promise<User | null> {
+    const users = await this.db.find<User>(TABLES.users, { email });
+    return users[0] ?? null;
+  }
+
+  private async findUserById(id: string): Promise<User | null> {
+    return this.db.findOne<User>(TABLES.users, { id });
+  }
+}
+
+
+// core/auth/AuthService.ts
+import type { AuthContext } from "./types";
+
+export interface AuthService {
+  login(email: string, password: string): Promise<{ accessToken: string; refreshToken: string }>;
+  refresh(refreshToken: string): Promise<{ accessToken: string; refreshToken: string }>;
+  verifyAccessToken(token: string): Promise<AuthContext | null>;
+  revokeRefreshToken(token: string): Promise<void>;
+}
+
+import { Router } from "express";
+import type { DatabaseAdapter } from "../db/DatabaseAdapter";
+import type { LicenseService } from "../license/LicenseService";
+import { JwtAuthService } from "./JwtAuthService";
+import { createAuthenticateMiddleware } from "../../api/middleware/authenticate";
+import { UserService } from "../../modules/users/UserService";
+import type { AuthContext } from "./types";
+import { audit } from "../audit/auditMiddleware";
+import { AuditLogService } from "../audit/AuditLogService";
+export function createAuthController(
+  db: DatabaseAdapter,
+  config: any,
+  licenseService: LicenseService
+) {
+  const router = Router();
+
+  const auditService = new AuditLogService(db);
+
+  const authService = new JwtAuthService(db, config.security);
+  const userService = new UserService(db, licenseService);
+  const authenticate = createAuthenticateMiddleware(authService);
+
+  // -------------------------------------------------------
+  // GET /api/auth/me
+  // -------------------------------------------------------
+router.get(
+  "/me",
+  authenticate, // MUSÍ BÝT PRVNÍ
+  audit("read", "user")(auditService),
+  async (req, res) => {
+    const auth = req.auth as AuthContext;
+    const user = await userService.findById(auth.userId);
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      permissions: auth.permissions,
+      isActive: user.isActive
+    });
+  }
+);
+
+  // -------------------------------------------------------
+  // DEBUG ENDPOINT (volitelné)
+  // -------------------------------------------------------
+  router.get("/debug/db", async (req, res) => {
+    try {
+      const dbName = await db.raw("SELECT DATABASE() AS db");
+      const version = await db.raw("SELECT @@version AS version");
+      const tables = await db.raw("SHOW TABLES");
+
+      res.json({
+        connectedTo: dbName,
+        mysqlVersion: version,
+        tables
+      });
+    } catch (err: any) {
+      console.error("DB DEBUG ERROR:", err);
+      res.status(500).json({ error: err.message || String(err) });
+    }
+  });
+
+  return router;
+}
+
+// backend/server.ts
+console.log("Booting backend...");
+/// <reference path="./types/express.d.ts" />
+
+import express from "express";
+import { LicenseService } from "./core/license/LicenseService";
+import { createAuthenticateMiddleware } from "./api/middleware/authenticate";
+import { JwtAuthService } from "./core/auth/JwtAuthService";
+import {loadDbConfig} from "./core/db/config/Database";
+import { createDatabaseAdapter } from "./core/db/createAdapter";
+import { SetupService } from "./setup/SetupService";
+import crypto from "crypto";
+import cookieParser from "cookie-parser";
+import { createSetupRouter } from "./setup/SetupController";
+import { createUserModule } from "./modules/users";
+import { ModuleLoader } from "./core/modules/ModuleLoader";
+import { createMachinesModule } from "./modules/machines";
+import { createAuthController } from "./core/auth/AuthController";
+import { createLicenseRouter } from "./api/routes/license";
+import { createAuthRouter } from "./api/routes/auth";
+import { createUserRoutes } from "./modules/users/userRoutes";
+import { UserService } from "./modules/users/UserService";
+import { UserController } from "./modules/users/UserController";
+import cors from "cors";
+import helmet from "helmet";
+import timeout from "connect-timeout";
+
+
+
+import fs from "fs";
+import path from "path";
+
+function loadServerConfig() {
+  const configPath = path.resolve(__dirname, "./config/server.json");
+  if (!fs.existsSync(configPath)) return null;
+  return JSON.parse(fs.readFileSync(configPath, "utf8"));
+}
+const config = loadServerConfig();
+
+async function main() {
+    const app = express();
+
+    app.use(
+        helmet({
+            contentSecurityPolicy: {
+            directives: {
+                defaultSrc: ["'self'"],
+                scriptSrc: ["'self'"],
+                connectSrc: ["'self'", "http://localhost:3000"],
+                imgSrc: ["'self'", "data:"],
+                styleSrc: ["'self'", "'unsafe-inline'"],
+            },
+            },
+            frameguard: { action: "deny" }, // zabrání clickjackingu
+            hsts: true, // HTTP Strict Transport Security
+            referrerPolicy: { policy: "no-referrer" },
+        })
+        );
+    // CSRF TOKEN GENERATOR – MUSÍ BÝT PRVNÍ
+    // ALWAYS attach CSRF token to every JSON response
+// app.use((req, res, next) => {
+//     const csrf = crypto.randomBytes(32).toString("hex");
+//     res.setHeader("x-csrf-token", csrf);
+//     next();
+// });
+
+
+    app.use(cookieParser());
+    app.use(express.json());
+
+    app.use(timeout("30s")); // TODO: Add for production with shorter timeout (10-15s) and proper error handling
+
+    app.use(cors({
+        origin: [
+            "https://app.vio.com",
+            "http://localhost:5173"
+        ],
+        credentials: true,
+        methods: ["GET", "POST", "PUT", "DELETE"],
+        allowedHeaders: ["Content-Type", "Authorization", "x-csrf-token"],
+        exposedHeaders: ["x-csrf-token"]
+    }));
+
+    const setup = new SetupService(null);
+
+    console.log("SERVER STARTED");
+
+    function csrfMiddleware(req: express.Request, res: express.Response, next: express.NextFunction) {
+        const url = req.originalUrl;
+
+        // výjimky – bez CSRF kontroly
+        if (
+            url === "/api/auth/login" ||
+            url === "/api/auth/refresh" ||
+            url === "/api/auth/me" ||
+            url === "/api/status"||
+            url === "/api/setup" ||
+            url === "/api/setup/validate-license" ||
+            url === "/api/setup/test-db"
+        ) {
+            return next();
+        }
+
+        const csrfCookie = req.cookies?.csrfToken;
+        const csrfHeader = req.headers["x-csrf-token"];
+
+        if (!csrfCookie || !csrfHeader || csrfCookie !== csrfHeader) {
+            return res.status(403).json({ error: "Invalid CSRF token" });
+        }
+
+        next();
+    }
+
+    app.use(csrfMiddleware);
+
+    app.use((req, res, next) => {
+  res.setHeader(
+    "Content-Security-Policy",
+    "default-src 'self' http://localhost:5173; connect-src 'self' http://localhost:5173 http://localhost:3000; img-src 'self' data:; style-src 'self' 'unsafe-inline';"
+  );
+  next();
+});
+
+
+    // Always available
+    // ALWAYS: status + setup
+    app.get("/api/status", async (req, res) => {
+        const isConfigured = setup.isConfigured();
+        let dbOk = false;
+
+        if (isConfigured) {
+            try {
+            const dbConfig = loadDbConfig();
+            const db = await createDatabaseAdapter(dbConfig);
+            await db.ping();
+            dbOk = true;
+            } catch {
+            dbOk = false;
+            }
+        }
+
+        res.json({
+            server: true,
+            setup: isConfigured,
+            db: dbOk
+        });
+    });
+
+    app.use("/api/setup", (req, res, next) => {
+        if (!setup.isConfigured()) {
+            return createSetupRouter(setup)(req, res, next);
+        }
+        next();
+    });
+
+    let db: any = null;
+    let auth: JwtAuthService | null = null;
+
+
+    // -----------------------------
+    //  NORMAL MODE ROUTES (mounted ALWAYS)
+    // -----------------------------
+
+try {
+  const dbConfig = loadDbConfig();
+  db = await createDatabaseAdapter(dbConfig);
+
+  const config = loadServerConfig();
+  if (!config) {
+    console.warn("No server.json config, running without normal routes.");
+  } else {
+    const licenseService = new LicenseService();
+    auth = new JwtAuthService(db, config.security);
+    const authenticate = createAuthenticateMiddleware(auth);
+
+    app.use("/api/auth", createAuthRouter(auth));
+
+    app.use("/api/auth", (req, res, next) => {
+      if (!setup.isConfigured()) return next();
+      return createAuthController(db, config, licenseService)(req, res, next);
+    });
+
+    app.use("/api/users", (req, res, next) => {
+      if (!setup.isConfigured()) return next();
+      const userService = new UserService(db, licenseService);
+      const userController = new UserController(userService);
+      return createUserRoutes(userController, auth!)(req, res, next);
+    });
+
+     // LICENSE
+    app.use("/api/license", (req, res, next) => {
+        if (!setup.isConfigured()) return next();
+        return createLicenseRouter(licenseService)(req, res, next);
+    });
+
+    // MODULES
+    const allModules = [
+        { name: "users", factory: createUserModule },
+        { name: "machines", factory: createMachinesModule }
+    ];
+
+    const loader = new ModuleLoader(licenseService);
+    const modules = loader.loadModules(
+        allModules.filter(m => licenseService.getLicense().allowedModules.includes(m.name)),
+        { db, license: licenseService, auth }
+    );
+
+    for (const mod of modules) {
+        app.use(`/${mod.name}`, (req, res, next) => {
+            if (!setup.isConfigured()) return next();
+            return authenticate(req, res, () => mod.routes(req, res, next));
+        });
+    }
+  }
+} catch (err: unknown) {
+  if (err instanceof Error) {
+    console.error("DB init failed, running in degraded mode:", err.message);
+  } else {
+    console.error("DB init failed, running in degraded mode:", err);
+  }
+}
+
+   
+
+    // -----------------------------
+    //  FALLBACK
+    // -----------------------------
+    app.use((req, res) => {
+        if (!setup.isConfigured()) {
+            return res.status(503).json({
+                error: "setup_required",
+                message: "Application is not configured yet."
+            });
+        }
+
+        res.status(404).json({ error: "not_found" });
+    });
+
+    app.listen(3000, () => console.log("Server listening: http://localhost:3000"));
+}
+
+main().catch(err => {
+    console.error("FATAL ERROR:", err);
+});

@@ -1,13 +1,15 @@
 import axios from "axios";
-
+import Cookies from "js-cookie";
 const api = axios.create({
   baseURL: "http://localhost:3000/api",
   withCredentials: true
 });
 
 // REQUEST: přidáme access token
+
+
 api.interceptors.request.use((config) => {
-  const csrf = localStorage.getItem("csrf");
+  const csrf = Cookies.get("csrf_token"); // název cookie z backendu
   const access = localStorage.getItem("accessToken");
 
   if (csrf) {
@@ -22,6 +24,7 @@ api.interceptors.request.use((config) => {
 });
 
 
+
 // RESPONSE: zachytíme 401 a zkusíme refresh
 let isRefreshing = false;
 let queue: any[] = [];
@@ -31,10 +34,11 @@ api.interceptors.response.use(
   async (error) => {
     const original = error.config;
 
-    if (original.url?.includes("/auth/login")) {
+    // login ani refresh neřešíme přes interceptor
+    if (original.url?.includes("/auth/login") || original.url?.includes("/auth/refresh")) {
       return Promise.reject(error);
     }
-    // pokud není 401 → normální chyba
+
     if (error.response?.status !== 401 || original._retry) {
       return Promise.reject(error);
     }

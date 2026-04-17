@@ -19,7 +19,7 @@ router.post("/login", async (req, res) => {
     const csrfToken = crypto.randomBytes(32).toString("hex");
 
     // 2) Uložit CSRF token do cookie (FE ho musí přečíst)
-    res.cookie("csrfToken", csrfToken, {
+    res.cookie("csrf_token", csrfToken, {
       httpOnly: false,
       secure: false,       // v produkci true
       sameSite: "strict",
@@ -68,7 +68,7 @@ router.post("/refresh", async (req, res) => {
     const { accessToken, refreshToken: newRefresh } = await auth.refresh(refreshToken);
 
     // obnovit refresh cookie
-    res.cookie("refreshToken", newRefresh, {
+    res.cookie("csrf_token", newRefresh, {
       httpOnly: true,
       secure: false,       // v produkci true
       sameSite: "strict",

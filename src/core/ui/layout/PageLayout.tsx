@@ -8,12 +8,9 @@ import { SideBar } from "./Sidebar";
 import { RightPanel } from "./RightPanel";
 import { PageHeaderPanel } from "./PageHeaderPanel";
 import type { RouteHandle } from "@app/routes/types";
-import { router } from "@app/routes/router";
 
-
-function buildBreadcrumbs(meta: any, params: any) {
+function buildBreadcrumbs(meta: any, params: any, t: (key: string) => string) {
   const items = [];
-  const { t } = useTranslation();
   // Dashboard
   items.push({
     label: t("dashboard.breadcrumb"),
@@ -45,50 +42,53 @@ function buildBreadcrumbs(meta: any, params: any) {
 }
 
 export function PageLayout() {
-const { sidebarOpen, setSidebarOpen } = useUI();
-
   const { t } = useTranslation();
-const matches = useMatches() as Array<{ handle?: RouteHandle; params?: any }>;
-const meta = matches.map(m => m.handle?.meta).filter(Boolean).at(-1);
-const params = matches.at(-1)?.params ?? {};
+
+  const { sidebarOpen, setSidebarOpen } = useUI();
+  const matches = useMatches() as Array<{ handle?: RouteHandle; params?: any }>;
+  const meta = matches.map(m => m.handle?.meta).filter(Boolean).at(-1);
+  const params = matches.at(-1)?.params ?? {};
 
   const isMobile = useMediaQuery("(max-width: 600px), (max-height: 600px)");
 
   const SIDEBAR_WIDTH = sidebarOpen ? 255 : 117;
-
+  const breadcrumbs = buildBreadcrumbs(meta, params, t);
 
   // Swipe gestures (mobile only)
-useEffect(() => {
-  if (!isMobile) return; // ← swipe jen na mobilech
+  useEffect(() => {
+    if (!isMobile) return; // ← swipe gestures only on mobile
 
-  let startX = 0;
+    let startX = 0;
 
-  const handleStart = (e: TouchEvent) => {
-    startX = e.touches[0].clientX;
-  };
+    // Open sidebar: swipe right from left edge
+    // Close sidebar: swipe left anywhere on screen
+    const handleStart = (e: TouchEvent) => {
+      startX = e.touches[0].clientX;
+    };
 
-  const handleMove = (e: TouchEvent) => {
-    const diff = e.touches[0].clientX - startX;
+    // Handle move with some threshold to prevent accidental opens/closes
+    const handleMove = (e: TouchEvent) => {
+      const diff = e.touches[0].clientX - startX;
 
-    // otevřít jen když sidebar je zavřený
-    if (diff > 50 && !sidebarOpen) {
-      setSidebarOpen(true);
-    }
+      // otevřít jen když sidebar je zavřený
+      if (diff > 50 && !sidebarOpen) {
+        setSidebarOpen(true);
+      }
 
-    // zavřít jen když sidebar je otevřený
-    if (diff < -50 && sidebarOpen) {
-      setSidebarOpen(false);
-    }
-  };
+      // zavřít jen když sidebar je otevřený
+      if (diff < -50 && sidebarOpen) {
+        setSidebarOpen(false);
+      }
+    };
 
-  window.addEventListener("touchstart", handleStart);
-  window.addEventListener("touchmove", handleMove);
+    window.addEventListener("touchstart", handleStart);
+    window.addEventListener("touchmove", handleMove);
 
-  return () => {
-    window.removeEventListener("touchstart", handleStart);
-    window.removeEventListener("touchmove", handleMove);
-  };
-}, [isMobile, sidebarOpen]);
+    return () => {
+      window.removeEventListener("touchstart", handleStart);
+      window.removeEventListener("touchmove", handleMove);
+    };
+  }, [isMobile, sidebarOpen]);
 
 
   return (
@@ -136,11 +136,8 @@ useEffect(() => {
           {meta && (
             <PageHeaderPanel
               title={t(meta.titleKey)}
-              breadcrumbs={buildBreadcrumbs(meta, params)}
+              breadcrumbs={breadcrumbs}
             />
-
-
-
           )}
 
           <Outlet />

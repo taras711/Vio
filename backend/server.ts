@@ -22,6 +22,9 @@ import { createUserRoutes } from "./modules/users/userRoutes";
 import { UserService } from "./modules/users/UserService";
 import { UserController } from "./modules/users/UserController";
 import cors from "cors";
+import helmet from "helmet";
+import timeout from "connect-timeout";
+
 
 
 import fs from "fs";
@@ -37,6 +40,22 @@ const config = loadServerConfig();
 async function main() {
     const app = express();
 
+    app.use(
+        helmet({
+            contentSecurityPolicy: {
+            directives: {
+                defaultSrc: ["'self'"],
+                scriptSrc: ["'self'"],
+                connectSrc: ["'self'", "http://localhost:3000"],
+                imgSrc: ["'self'", "data:"],
+                styleSrc: ["'self'", "'unsafe-inline'"],
+            },
+            },
+            frameguard: { action: "deny" }, // zabrání clickjackingu
+            hsts: true, // HTTP Strict Transport Security
+            referrerPolicy: { policy: "no-referrer" },
+        })
+        );
     // CSRF TOKEN GENERATOR – MUSÍ BÝT PRVNÍ
     // ALWAYS attach CSRF token to every JSON response
 // app.use((req, res, next) => {
@@ -48,6 +67,8 @@ async function main() {
 
     app.use(cookieParser());
     app.use(express.json());
+
+    app.use(timeout("30s")); // TODO: Add for production with shorter timeout (10-15s) and proper error handling
 
     app.use(cors({
         origin: [
@@ -93,8 +114,13 @@ async function main() {
     app.use(csrfMiddleware);
 
     app.use((req, res, next) => {
-        next();
-    });
+  res.setHeader(
+    "Content-Security-Policy",
+    "default-src 'self' http://localhost:5173; connect-src 'self' http://localhost:5173 http://localhost:3000; img-src 'self' data:; style-src 'self' 'unsafe-inline';"
+  );
+  next();
+});
+
 
     // Always available
     // ALWAYS: status + setup
@@ -147,12 +173,14 @@ try {
     auth = new JwtAuthService(db, config.security);
     const authenticate = createAuthenticateMiddleware(auth);
 
-    app.use("/api/auth", createAuthRouter(auth));
+    
 
     app.use("/api/auth", (req, res, next) => {
       if (!setup.isConfigured()) return next();
       return createAuthController(db, config, licenseService)(req, res, next);
     });
+
+    app.use("/api/auth", createAuthRouter(auth));
 
     app.use("/api/users", (req, res, next) => {
       if (!setup.isConfigured()) return next();

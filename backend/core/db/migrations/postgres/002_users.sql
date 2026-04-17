@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS users (
   department VARCHAR(255),
   section VARCHAR(255),
   workGroup VARCHAR(255),
-  location VARCHAR(255),
+  location VARCHAR(255)
 );
 
 ALTER TABLE users

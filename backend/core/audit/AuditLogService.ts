@@ -1,6 +1,7 @@
 // core/audit/AuditLogService.ts
 
 import type { DatabaseAdapter } from "../db/DatabaseAdapter";
+import { TABLES } from "../db/schema/tables";
 
 export interface AuditLogEntry {
   id: string;
@@ -22,6 +23,6 @@ export class AuditLogService {
       ...entry
     };
 
-    await this.db.insert("audit_logs", full);
+    await this.db.insert(TABLES.audit_logs, full);
   }
 }

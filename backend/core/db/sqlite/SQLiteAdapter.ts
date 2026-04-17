@@ -1,6 +1,8 @@
 import Database from "better-sqlite3";
 import type { DatabaseAdapter } from "../DatabaseAdapter";
+import { TABLES, type TableName } from "../schema/tables";
 
+const ALLOWED_TABLES = new Set(Object.values(TABLES));
 export class SQLiteAdapter implements DatabaseAdapter {
   private db: Database.Database;
   readonly type = "sqlite";
@@ -32,6 +34,9 @@ async raw(query: string, params: any[] = []): Promise<any> {
 }
 
   async find<T>(table: string, query: any): Promise<T[]> {
+    if (!ALLOWED_TABLES.has(table as TableName)) {
+      throw new Error(`Table "${table}" is not allowed.`);
+    }
     const keys = Object.keys(query);
     const where = keys.map(k => `${k} = ?`).join(" AND ");
     const values = Object.values(query);
@@ -43,6 +48,9 @@ async raw(query: string, params: any[] = []): Promise<any> {
   }
 
   async findOne<T>(table: string, query: any): Promise<T | null> {
+    if (!ALLOWED_TABLES.has(table as TableName)) {
+      throw new Error(`Table "${table}" is not allowed.`);
+    }
     const keys = Object.keys(query);
     const where = keys.map(k => `${k} = ?`).join(" AND ");
     const values = Object.values(query);
@@ -54,6 +62,9 @@ async raw(query: string, params: any[] = []): Promise<any> {
   }
 
   async insert<T>(table: string, data: T): Promise<void> {
+    if (!ALLOWED_TABLES.has(table as TableName)) {
+      throw new Error(`Table "${table}" is not allowed.`);
+    }
     const obj = data as any;
     const keys = Object.keys(obj);
     const values = keys.map(k => this.normalizeValue(obj[k]));
@@ -68,6 +79,9 @@ async raw(query: string, params: any[] = []): Promise<any> {
   }
 
 async update<T>(table: string, query: any, data: Partial<T>): Promise<void> {
+  if (!ALLOWED_TABLES.has(table as TableName)) {
+    throw new Error(`Table "${table}" is not allowed.`);
+  }
   const obj = data as any;
 
   const setKeys = Object.keys(obj);
@@ -89,6 +103,9 @@ async update<T>(table: string, query: any, data: Partial<T>): Promise<void> {
 }
 
 findById<T>(table: string, id: string): Promise<T | null> {
+  if (!ALLOWED_TABLES.has(table as TableName)) {
+    throw new Error(`Table "${table}" is not allowed.`);
+  }
   const stmt = this.db.prepare(`SELECT * FROM ${table} WHERE id = ?`);
   const row = stmt.get(id);
   return Promise.resolve((row as unknown as T) ?? null);
@@ -101,6 +118,9 @@ findByEmail<T>(table: string, email: string): Promise<T | null> {
 }
 
 async delete(table: string, query: any): Promise<void> {
+  if (!ALLOWED_TABLES.has(table as TableName)) {
+    throw new Error(`Table "${table}" is not allowed.`);
+  }
   const keys = Object.keys(query);
   const where = keys.map(k => `${k} = ?`).join(" AND ");
   const values = keys.map(k => this.normalizeValue(query[k]));
