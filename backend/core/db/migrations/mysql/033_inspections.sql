@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS inspections (
     assignedTo VARCHAR(36) NOT NULL,
     type VARCHAR(255) NOT NULL,
     status VARCHAR(255) NOT NULL,
+    formId VARCHAR(36) NOT NULL,
     description TEXT NULL DEFAULT ' ',
     createdAt BIGINT NOT NULL,
     updatedAt BIGINT NOT NULL,
