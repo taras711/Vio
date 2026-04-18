@@ -1,4 +1,8 @@
-// backend/core/license/LicensePolicy.ts
+/**
+ * Interface for the license policy.
+ * @module license/LicensePolicy
+ * @description This module contains the interface for the license policy.
+ */
 import { LicenseType } from "./LicenseType";
 
 export interface LicensePolicy {
@@ -11,6 +15,7 @@ export interface LicensePolicy {
 }
 
 export const LICENSE_POLICIES: Record<LicenseType, LicensePolicy> = {
+  // Trial license
   trial: {
     durationDays: 14,
     maxUsers: 3,
@@ -19,7 +24,7 @@ export const LICENSE_POLICIES: Record<LicenseType, LicensePolicy> = {
     gracePeriodDays: 0,
     blocksAppOnExpire: true
   },
-
+  // Standard license
   standard: {
     durationDays: 365,
     maxUsers: 50,
@@ -28,7 +33,7 @@ export const LICENSE_POLICIES: Record<LicenseType, LicensePolicy> = {
     gracePeriodDays: 0,
     blocksAppOnExpire: false
   },
-
+  // Enterprise license
   enterprise: {
     durationDays: 365 * 3,
     maxUsers: 9999,

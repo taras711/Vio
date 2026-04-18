@@ -1,3 +1,7 @@
+/**
+ * @module core/license/LicenseService
+ * @description This module contains the license service.
+ */
 import fs from "fs";
 import path from "path";
 import crypto from "crypto";
@@ -10,50 +14,58 @@ export class LicenseService {
 
   constructor(licenseCode?: string, isSaveToFile: boolean = false) {
     if (!licenseCode) {
+      // Load license from file
       const p = path.resolve(__dirname, "../../config/license.json");
       const json = fs.readFileSync(p, "utf8");
-      const obj = JSON.parse(json) as LicenseModel;
-
-      console.log("LICENSE PATH:", p);
-console.log("LICENSE CONTENT:", obj);
-      this.verifySignature(obj);
+      const obj = JSON.parse(json) as LicenseModel; 
+      this.verifySignature(obj); // Verify signature
       this.license = obj;
       return;
     }
 
-    // Načítáme z Base58 kódu
-    const json = decodeBase58ToJson(licenseCode);   // ← TADY JE OPRAVA
+    // Load license from code
+    const json = decodeBase58ToJson(licenseCode); 
     const obj = JSON.parse(json) as LicenseModel;
 
-    this.verifySignature(obj);
+    this.verifySignature(obj); // Verify signature
     this.license = obj;
 
+    // Save license to file
     if (isSaveToFile) {
       const licensePath = path.resolve(__dirname, "../../config/license.json");
       fs.writeFileSync(licensePath, JSON.stringify(obj, null, 2), "utf8");
-      console.log("License saved to:", licensePath);
+    } 
+  }
+
+  /**
+   * Verify the license signature.
+   * @throws If the license signature is invalid.
+   * @private
+   */
+  private verifySignature(license: LicenseModel) {
+    const { signature, ...unsigned } = license;
+    const canonical = canonicalize(unsigned); // Canonicalize the license
+
+    const publicKeyPath = path.resolve(__dirname, "../../config/license_public.pem");
+    const publicKey = fs.readFileSync(publicKeyPath, "utf8");
+
+    // Verify the license signature
+    const verifier = crypto.createVerify("RSA-SHA256");
+    verifier.update(canonical); // Update the verifier
+    verifier.end();
+
+    // Verify the signature
+    if (!verifier.verify(publicKey, signature, "base64")) {
+      throw new Error("Invalid license signature");
     }
-
-    
   }
 
-private verifySignature(license: LicenseModel) {
-  const { signature, ...unsigned } = license;
-  const canonical = canonicalize(unsigned); // ← použij stejnou funkci jako při podpisu
 
-  const publicKeyPath = path.resolve(__dirname, "../../config/license_public.pem");
-  const publicKey = fs.readFileSync(publicKeyPath, "utf8");
-
-  const verifier = crypto.createVerify("RSA-SHA256");
-  verifier.update(canonical);
-  verifier.end();
-
-  if (!verifier.verify(publicKey, signature, "base64")) {
-    throw new Error("Invalid license signature");
-  }
-}
-
-
+  /**
+   * Verify if the given short code matches the short code of the currently loaded license.
+   * @param input - The short code to verify.
+   * @returns true if the given short code matches the short code of the currently loaded license.
+   */
   isShortCodeValid(input: string): boolean {
     const { signature, ...unsigned } = this.license;
     const canonical = canonicalize(unsigned);
@@ -61,7 +73,10 @@ private verifySignature(license: LicenseModel) {
     return expected === input.toUpperCase();
   }
 
-
+  /**
+   * Get the currently loaded license.
+   * @returns The currently loaded license.
+   */
   getLicense() {
     return this.license;
   }

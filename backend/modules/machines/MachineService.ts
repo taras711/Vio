@@ -6,11 +6,11 @@ export class MachineService {
   constructor(private db: DatabaseAdapter) {}
 
   async getAll(): Promise<Machine[]> {
-    return this.db.find<Machine>(TABLES.machines, {});
+    return this.db.find<Machine>(TABLES.assets, {});
   }
 
   async getById(id: string): Promise<Machine | null> {
-    return this.db.findOne<Machine>(TABLES.machines, { id });
+    return this.db.findOne<Machine>(TABLES.assets, { id });
   }
 
   async create(dto: CreateMachineDto): Promise<Machine> {
@@ -25,18 +25,18 @@ export class MachineService {
       updatedAt: new Date().toISOString()
     };
 
-    await this.db.insert(TABLES.machines, machine);
+    await this.db.insert(TABLES.assets, machine);
     return machine;
   }
 
   async update(id: string, dto: UpdateMachineDto): Promise<void> {
-    await this.db.update(TABLES.machines, { id }, {
+    await this.db.update(TABLES.assets, { id }, {
       ...dto,
       updatedAt: new Date().toISOString()
     });
   }
 
   async delete(id: string): Promise<void> {
-    await this.db.delete(TABLES.machines, { id });
+    await this.db.delete(TABLES.assets, { id });
   }
 }

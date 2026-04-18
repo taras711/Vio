@@ -1,21 +1,45 @@
-// backend/modules/users/userRoutes.ts
+/**
+ * This file contains the routes for the users module.
+ * @module core/users
+ * @description This file contains the routes for the users module.
+ */
 import { Router, Request, Response, NextFunction } from "express";
 import type { AuthContext, Permission } from "../../core/auth/types";
 import type { UserController } from "./UserController";
 import { createAuthenticateMiddleware } from "../../api/middleware/authenticate";
 import { DefaultPermissionService } from "../../core/auth/PermissionService";
-import type { PermissionService } from "../../core/auth/PermissionService";
-  const permissions = new DefaultPermissionService();
 
-  //router.use(createAuthenticateMiddleware(auth));
+const permissions = new DefaultPermissionService(); // type assertion
 
+/**
+ * Checks if the user has the given permission and calls the next middleware if they do.
+ * 
+ * @param permission - The permission to check.
+ * @returns A middleware function that checks if the user has the permission.
+ */
 function withPermission(permission: Permission) {
+  // type assertion
   return (req: Request, res: Response, next: NextFunction) => {
     const auth = req.auth as AuthContext;
     permissions.requirePermission(auth, permission);
     next();
   };
 }
+
+/**
+ * Creates the routes for the users module.
+ * The routes are secured with authentication and permission
+ * checks.
+ * The following routes are created:
+ * - GET /
+ * - GET /:id
+ * - POST /
+ * - PUT /:id
+ * - DELETE /:id
+ * @param controller - The user controller.
+ * @param auth - The authentication service.
+ * @returns The router with the created routes.
+ */
 export function createUserRoutes(controller: UserController, auth: any) {
   const router = Router();
   const authenticate = createAuthenticateMiddleware(auth);

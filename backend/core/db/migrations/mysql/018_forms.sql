@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS forms (
     createdBy VARCHAR(36) NOT NULL,
     updatedBy VARCHAR(36) NOT NULL,
     sectorId VARCHAR(36) NULL,
+    media VARCHAR(36) NULL,
     createdAt BIGINT NOT NULL,
     updatedAt BIGINT NOT NULL,
     PRIMARY KEY (id)

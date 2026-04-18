@@ -1,3 +1,8 @@
+/**
+ * User schema
+ * @module core/users
+ * @description This module contains the schema for the users module.
+ */
 import { z } from "zod";
 
 export const CreateUserSchema = z.object({

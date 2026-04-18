@@ -1,5 +1,8 @@
-// backend/modules/users/UserTypes.ts
-import type { Role, Permission } from "../../core/auth/types";
+/**
+ * @module modules/users/UserTypes
+ * @description This module contains the types for the users module.
+ */
+import type { Role } from "../../core/auth/types";
 
 export interface User {
   id: string;

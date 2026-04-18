@@ -1,16 +1,23 @@
-// backend/server.ts
-console.log("Booting backend...");
+/**
+ * @module server
+ * @description This module contains the server code.
+ */
 /// <reference path="./types/express.d.ts" />
 
 import express from "express";
+import cookieParser from "cookie-parser";
+import cors from "cors";
+import helmet from "helmet";
+import timeout from "connect-timeout";
+import csurf from "csurf";
+import fs from "fs";
+import path from "path";
 import { LicenseService } from "./core/license/LicenseService";
 import { createAuthenticateMiddleware } from "./api/middleware/authenticate";
 import { JwtAuthService } from "./core/auth/JwtAuthService";
 import {loadDbConfig} from "./core/db/config/Database";
 import { createDatabaseAdapter } from "./core/db/createAdapter";
 import { SetupService } from "./setup/SetupService";
-import crypto from "crypto";
-import cookieParser from "cookie-parser";
 import { createSetupRouter } from "./setup/SetupController";
 import { createUserModule } from "./modules/users";
 import { ModuleLoader } from "./core/modules/ModuleLoader";
@@ -21,64 +28,41 @@ import { createAuthRouter } from "./api/routes/auth";
 import { createUserRoutes } from "./modules/users/userRoutes";
 import { UserService } from "./modules/users/UserService";
 import { UserController } from "./modules/users/UserController";
-import cors from "cors";
-import helmet from "helmet";
-import timeout from "connect-timeout";
-import csurf from "csurf";
-
-
-
-import fs from "fs";
-import path from "path";
 
 function loadServerConfig() {
   const configPath = path.resolve(__dirname, "./config/server.json");
   if (!fs.existsSync(configPath)) return null;
   return JSON.parse(fs.readFileSync(configPath, "utf8"));
 }
-const config = loadServerConfig();
-const csrfProtection = csurf({
-  cookie: {
-    key: "csrfToken",
-    httpOnly: false,     // FE musí token přečíst
-    secure: false,       // v produkci true
-    sameSite: "strict",
-    path: "/"
-  }
-});
+
 async function main() {
     const app = express();
 
+//------------ SECURITY
     app.use(
         helmet({
             contentSecurityPolicy: {
-            directives: {
-                defaultSrc: ["'self'"],
-                scriptSrc: ["'self'"],
-                connectSrc: ["'self'", "http://localhost:3000"],
-                imgSrc: ["'self'", "data:"],
-                styleSrc: ["'self'", "'unsafe-inline'"],
+                directives: {
+                    defaultSrc: ["'self'"],
+                    scriptSrc: ["'self'"],
+                    connectSrc: ["'self'", "http://localhost:3000"],
+                    imgSrc: ["'self'", "data:"],
+                    styleSrc: ["'self'", "'unsafe-inline'"],
+                },
             },
-            },
-            frameguard: { action: "deny" }, // zabrání clickjackingu
+            frameguard: { action: "deny" }, // Pre clickjackingu
             hsts: true, // HTTP Strict Transport Security
             referrerPolicy: { policy: "no-referrer" },
         })
-        );
-    // CSRF TOKEN GENERATOR – MUSÍ BÝT PRVNÍ
-    // ALWAYS attach CSRF token to every JSON response
-// app.use((req, res, next) => {
-//     const csrf = crypto.randomBytes(32).toString("hex");
-//     res.setHeader("x-csrf-token", csrf);
-//     next();
-// });
-
+    );
 
     app.use(cookieParser());
     app.use(express.json());
 
+    // Timeout for requests
     app.use(timeout("30s")); // TODO: Add for production with shorter timeout (10-15s) and proper error handling
-
+    
+    // CORS
     app.use(cors({
         origin: [
             "https://app.vio.com",
@@ -90,61 +74,34 @@ async function main() {
         exposedHeaders: ["x-csrf-token"]
     }));
 
+//------------ CSRF
     const setup = new SetupService(null);
 
-    console.log("SERVER STARTED");
-
-    // function csrfMiddleware(req: express.Request, res: express.Response, next: express.NextFunction) {
-    //     const url = req.originalUrl;
-
-    //     // výjimky – bez CSRF kontroly
-    //     if (
-    //         url === "/api/auth/login" ||
-    //         url === "/api/auth/refresh" ||
-    //         url === "/api/auth/me" ||
-    //         url === "/api/status"||
-    //         url === "/api/setup" ||
-    //         url === "/api/setup/validate-license" ||
-    //         url === "/api/setup/test-db"
-    //     ) {
-    //         return next();
-    //     }
-
-    //     const csrfCookie = req.cookies?.csrf_token;
-    //     const csrfHeader = req.headers["x-csrf-token"];
-
-    //     if (!csrfCookie || !csrfHeader || csrfCookie !== csrfHeader) {
-    //         return res.status(403).json({ error: "Invalid CSRF token" });
-    //     }
-
-    //     next();
-    // }
-
-    // app.use(csrfMiddleware);
-
+// ------------ Content Security Policy
     app.use((req, res, next) => {
-  res.setHeader(
-    "Content-Security-Policy",
-    "default-src 'self' http://localhost:5173; connect-src 'self' http://localhost:5173 http://localhost:3000; img-src 'self' data:; style-src 'self' 'unsafe-inline';"
-  );
-  next();
-});
+        res.setHeader(
+            "Content-Security-Policy",
+            "default-src 'self' http://localhost:5173; connect-src 'self' http://localhost:5173 http://localhost:3000; img-src 'self' data:; style-src 'self' 'unsafe-inline';"
+        );
+        next();
+    });
 
-
+// ------------ SETUP
     // Always available
     // ALWAYS: status + setup
     app.get("/api/status", async (req, res) => {
         const isConfigured = setup.isConfigured();
-        let dbOk = false;
+        let dbOk = false; // Default db is not ok
 
+        // Check DB
         if (isConfigured) {
             try {
-            const dbConfig = loadDbConfig();
-            const db = await createDatabaseAdapter(dbConfig);
-            await db.ping();
-            dbOk = true;
+                const dbConfig = loadDbConfig();
+                const db = await createDatabaseAdapter(dbConfig);
+                await db.ping();
+                dbOk = true;
             } catch {
-            dbOk = false;
+                dbOk = false;
             }
         }
 
@@ -154,7 +111,7 @@ async function main() {
             db: dbOk
         });
     });
-
+    
     app.use("/api/setup", (req, res, next) => {
         if (!setup.isConfigured()) {
             return createSetupRouter(setup)(req, res, next);
@@ -162,8 +119,8 @@ async function main() {
         next();
     });
 
-    let db: any = null;
-    let auth: JwtAuthService | null = null;
+    let db: any = null; // Database
+    let auth: JwtAuthService | null = null; // Auth service
 
 
     // -----------------------------

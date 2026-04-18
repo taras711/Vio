@@ -1,4 +1,8 @@
-// backend/core/license/LicenseModel.ts
+/**
+ * Interface for the license model.
+ * @module license/LicenseModel
+ * @description This module contains the interface for the license model.
+ */
 import { LicenseType } from "./LicenseType";
 
 export interface LicenseModel {

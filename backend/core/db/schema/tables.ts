@@ -1,27 +1,55 @@
+import { attach } from "node-firebird";
 
+/**
+ * Database table names
+ * @module core/db/schema/tables
+ * @description This file contains the database table names.
+ */
 export const TABLES = {
     audit_logs: "audit_logs",
     forms: "forms",
-    machines: "assets",
+    assets: "assets",
     migrations: "migrations",
     permissions: "permissions",
     plugins: "plugins",
     reports: "reports",
     revoked_tokens: "revoked_tokens",
-    rolees: "roles",
+    roles: "roles",
     sectors: "sectors",
     sessions: "sessions",
     settings: "settings",
     SHIFTS: "shifts",
     skills: "skills",
     tasks: "tasks",
-    task_attachments: "task_attachments",
-    task_comments: "task_comments",
-    task_history: "task_history",
-    teams_groups: "teams_groups",
+    attachments: "attachments",
+    comments: "comments",
+    history: "history",
+    teams: "teams",
     users: "users",
     zones: "zones",
-    zone_components: "zone_components"
+    zone_components: "zone_components",
+    areas: "areas",
+    area_visibility: "area_visibility",
+    categories: "categories",
+    category_assignments: "category_assignments",
+    products: "products",
+    product_attributes: "product_attributes",
+    product_relations: "product_relations",
+    plans: "plans",
+    orders: "orders",
+    costs: "costs",
+    inspections: "inspections",
+    role_permissions: "role_permissions",
+    user_roles: "user_roles",
+    user_permissions: "user_permissions",
+    role_profiles: "role_profiles",
+    role_profile_permissions: "role_profile_permissions",
+    role_profile_conditions: "role_profile_conditions",
+    user_profiles: "user_profiles",
+    projects: "projects",
+    suggestions: "suggestions",
+    actions: "actions",
+
 } as const;
 
 export type TableName = typeof TABLES[keyof typeof TABLES];
