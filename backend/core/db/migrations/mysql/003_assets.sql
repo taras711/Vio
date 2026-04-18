@@ -7,6 +7,8 @@ CREATE TABLE IF NOT EXISTS assets (
   isActive TINYINT(1) NOT NULL,
   createdAt BIGINT  NOT NULL,
   updatedAt BIGINT  NOT NULL,
+  safety VARCHAR(255),
+  ppe VARCHAR(255) NOT NULL, -- personal protective equipment
   status VARCHAR(255),
   lastSeenAt TEXT,
   firmwareVersion VARCHAR(255),

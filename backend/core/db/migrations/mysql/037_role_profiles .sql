@@ -1,11 +1,10 @@
-/* backend/core/db/migrations/mysql/011_zones.sql */
-CREATE TABLE IF NOT EXISTS zones (
+CREATE TABLE role_profiles (
     id VARCHAR(36) NOT NULL,
     name VARCHAR(255) NOT NULL,
-    assetId VARCHAR(36) NOT NULL,
     description TEXT NULL,
-    safety VARCHAR(255) NOT NULL,
+    category VARCHAR(100) NULL, -- např. "maintenance", "quality", "production"
+    priority INT NOT NULL DEFAULT 0,
     createdAt BIGINT NOT NULL,
     updatedAt BIGINT NOT NULL,
     PRIMARY KEY (id)
-)
+);
