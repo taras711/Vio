@@ -69,7 +69,7 @@ useEffect(() => {
   }
   if (loading) return <Loading />;
 
-  if (dbOk === false) {
+  if (dbOk === false && setup === true) {
     return (
       <NotificationPage
         message="Database connection failed"
@@ -82,8 +82,12 @@ useEffect(() => {
       </NotificationPage>
     );
   }
- if (setup === false) {
-  return <SetupWizard />;
+if (setup === false) {
+  return (
+    <UIProvider>
+      <SetupWizard />
+    </UIProvider>
+  );
 }
   return (
     <AuthProvider>

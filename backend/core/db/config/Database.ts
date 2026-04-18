@@ -45,7 +45,7 @@ export type DbConfig =
   | SqliteConfig;
 
 export function loadDbConfig(): DbConfig {
-  const configPath = path.resolve(__dirname, "../../config/server.json");
+  const configPath = path.resolve(__dirname, "../../../config/server.json");
 
   // 1) Pokud existuje server.json → použij ho
   if (fs.existsSync(configPath)) {
@@ -54,6 +54,12 @@ export function loadDbConfig(): DbConfig {
       return json.database as DbConfig;
     }
   }
+
+  console.log("CWD:", process.cwd());
+console.log("DIRNAME:", __dirname);
+console.log("CONFIG PATH:", configPath);
+console.log("CONFIG EXISTS:", fs.existsSync(configPath));
+
 
   // 2) Fallback pro vývojáře (ty)
   const type = process.env.DB_TYPE;

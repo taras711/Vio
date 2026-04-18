@@ -1,3 +1,4 @@
+// backend/core/auth/AuthController.ts
 import { Router } from "express";
 import type { DatabaseAdapter } from "../db/DatabaseAdapter";
 import type { LicenseService } from "../license/LicenseService";

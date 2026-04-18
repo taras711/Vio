@@ -14,6 +14,8 @@ export class LicenseService {
       const json = fs.readFileSync(p, "utf8");
       const obj = JSON.parse(json) as LicenseModel;
 
+      console.log("LICENSE PATH:", p);
+console.log("LICENSE CONTENT:", obj);
       this.verifySignature(obj);
       this.license = obj;
       return;
@@ -31,6 +33,8 @@ export class LicenseService {
       fs.writeFileSync(licensePath, JSON.stringify(obj, null, 2), "utf8");
       console.log("License saved to:", licensePath);
     }
+
+    
   }
 
 private verifySignature(license: LicenseModel) {

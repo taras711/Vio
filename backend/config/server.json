@@ -5,7 +5,7 @@
     "port": 3306,
     "user": "root",
     "password": "",
-    "database": "vio"
+    "database": "vecta"
   },
   "security": {
     "jwtPrivateKey": "./backend/config/keys/jwt_private.pem",

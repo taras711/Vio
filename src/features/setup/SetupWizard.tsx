@@ -10,7 +10,6 @@ import { useActionFeedback } from "@hooks/ActionFeedback";
 export function SetupWizard() {
   const { success, error } = useActionFeedback();
   const [step, setStep] = useState(1);
-  const navigate = useNavigate();
   const version = APP_VERSION;
   const [licenseKey, setLicenseKey] = useState("");
   const [licenseError, setLicenseError] = useState("");
@@ -170,7 +169,7 @@ async function finishSetup() {
     localStorage.setItem("setupDone", "true");
 
     // ⭐ ŽÁDNÝ reload
-    navigate("/login", { replace: true });
+    window.location.href = "/login";
 
   } catch (err: any) {
     setAdminError(err.message);
