@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS reports (
     id VARCHAR(36) NOT NULL,
     title VARCHAR(255) NOT NULL,
     shiftId VARCHAR(36) NOT NULL,
-    machineId VARCHAR(36) NOT NULL,
+    assetId VARCHAR(36) NOT NULL,
     shiftType VARCHAR(255) NOT NULL,
     status VARCHAR(255) NOT NULL,
     date BIGINT NOT NULL,

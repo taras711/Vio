@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS skills (
     level VARCHAR(255) NOT NULL,
     userId VARCHAR(36) NOT NULL,
     sectorId VARCHAR(36) NOT NULL,
-    machineId VARCHAR(36) NOT NULL,
+    assetId VARCHAR(36) NOT NULL,
     createdAt BIGINT NOT NULL,
     updatedAt BIGINT NOT NULL,
     PRIMARY KEY (id)

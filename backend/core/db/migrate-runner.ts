@@ -1,4 +1,7 @@
-// backend/core/db/migrate-runner.ts
+/**
+ * @module core/db/migrate-runner
+ * @description This file contains the database migration runner.
+ */
 import { createDatabaseAdapter } from "./createAdapter";
 import { runMigrations } from "./migrate";
 

@@ -1,5 +1,8 @@
-// core/db/DatabaseAdapter.ts
-
+/**
+ * Interface for database adapter
+ * @module core/db/DatabaseAdapter
+ * @description This file contains the database adapter interface.
+ */
 export interface DatabaseAdapter {
   type: "postgres" | "mysql" | "mongo" | "firebird" | "sqlite";
   

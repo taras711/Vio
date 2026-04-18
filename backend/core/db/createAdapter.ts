@@ -1,15 +1,16 @@
-// core/db/createAdapter.ts
-import type { DatabaseAdapter } from "./DatabaseAdapter";
+/**
+ * @module core/db/createAdapter
+ * @description This file contains the database adapter factory.
+ */
 import type { DbConfig } from "./config/Database";
 import { PostgresAdapter } from "./postgres/PostgresAdapter";
 import { MySqlAdapter } from "./mysql/MySqlAdapter";
 import { MongoAdapter } from "./mongo/MongoAdapter";
 import { FirebirdAdapter } from "./firebird/FirebirdAdapter";
 import { SQLiteAdapter } from "./sqlite/SQLiteAdapter";
-import dotenv from "dotenv";
-dotenv.config();
 
 export async function createDatabaseAdapter(config: DbConfig) {
+  // Switch on DB type and return the correct adapter
   switch (config.type) {
     case "postgres":
       return new PostgresAdapter(config);

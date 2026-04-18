@@ -1,10 +1,9 @@
-/* backend/core/db/migrations/mysql/011_zones.sql */
-CREATE TABLE IF NOT EXISTS zones (
+CREATE TABLE IF NOT EXISTS products (
     id VARCHAR(36) NOT NULL,
     name VARCHAR(255) NOT NULL,
-    assetId VARCHAR(36) NOT NULL,
+    type VARCHAR(50) NOT NULL,
     description TEXT NULL,
     createdAt BIGINT NOT NULL,
     updatedAt BIGINT NOT NULL,
     PRIMARY KEY (id)
-)
+);

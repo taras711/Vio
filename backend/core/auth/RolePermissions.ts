@@ -1,3 +1,7 @@
+/**
+ * @module core/auth/RolePermissions
+ * @description This file contains the permissions for each role.
+ */
 import type { Role, Permission } from "./types";
 
 export const RolePermissions: Record<Role, Permission[]> = {

@@ -2,7 +2,7 @@
 export const TABLES = {
     audit_logs: "audit_logs",
     forms: "forms",
-    machines: "machines",
+    machines: "assets",
     migrations: "migrations",
     permissions: "permissions",
     plugins: "plugins",

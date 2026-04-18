@@ -1,3 +1,7 @@
+/**
+ * @module core/db/config/Database
+ * @description This file contains the database configuration.
+ */
 import fs from "fs";
 import path from "path";
 
@@ -47,7 +51,7 @@ export type DbConfig =
 export function loadDbConfig(): DbConfig {
   const configPath = path.resolve(__dirname, "../../../config/server.json");
 
-  // 1) Pokud existuje server.json → použij ho
+  // 1) Load config from file
   if (fs.existsSync(configPath)) {
     const json = JSON.parse(fs.readFileSync(configPath, "utf8"));
     if (json.database) {
@@ -55,15 +59,11 @@ export function loadDbConfig(): DbConfig {
     }
   }
 
-  console.log("CWD:", process.cwd());
-console.log("DIRNAME:", __dirname);
-console.log("CONFIG PATH:", configPath);
-console.log("CONFIG EXISTS:", fs.existsSync(configPath));
 
-
-  // 2) Fallback pro vývojáře (ty)
+  // 2) Fallback to environment variables
   const type = process.env.DB_TYPE;
 
+  // 3) Fallback to defaults
   switch (type) {
     case "postgres":
       return {

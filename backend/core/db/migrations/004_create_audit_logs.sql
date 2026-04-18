@@ -1,9 +1,0 @@
-CREATE TABLE IF NOT EXISTS audit_logs (
-  id VARCHAR(36) PRIMARY KEY,
-  timestamp BIGINT NOT NULL,
-  userId VARCHAR(36) NOT NULL,
-  action VARCHAR(255) NOT NULL,
-  entity VARCHAR(255) NOT NULL,
-  entityId VARCHAR(255) NOT NULL,
-  details TEXT
-);

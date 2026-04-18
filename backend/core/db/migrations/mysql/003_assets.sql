@@ -1,5 +1,4 @@
-/* backend/core/db/migrations/mysql/003_machines.sql */
-CREATE TABLE IF NOT EXISTS machines (
+CREATE TABLE IF NOT EXISTS assets (
   id VARCHAR(36) NOT NULL,
   name VARCHAR(255) NOT NULL,
   description TEXT NULL,

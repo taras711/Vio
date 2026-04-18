@@ -1,3 +1,7 @@
+/**
+ * @module core/auth/types
+ * @description This file contains the types for the authentication module.
+ */
 export type Role = "superadmin" | "admin" | "user";
 
 export type Permission =

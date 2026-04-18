@@ -13,7 +13,7 @@ dist-ssr
 *.local
 *.pem
 verify-license.js
-backend/config/server.json
+backend/config/*
 encode.js
 tools/
 *.md

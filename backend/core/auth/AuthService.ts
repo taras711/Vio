@@ -1,4 +1,10 @@
-// core/auth/AuthService.ts
+/**
+ * Checks if the given token is revoked or not.
+ * @module core/auth/AuthService
+ * @param token - The token to check.
+ * @returns A promise that resolves to true if the token is revoked or false otherwise.
+ */
+
 import type { AuthContext } from "./types";
 
 export interface AuthService {
