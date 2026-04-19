@@ -19,5 +19,6 @@ CREATE TABLE IF NOT EXISTS users (
   section VARCHAR(255),
   workGroup VARCHAR(255),
   location VARCHAR(255),
+  lastDeactivatedAt BIGINT NULL,
   PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;

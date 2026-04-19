@@ -8,6 +8,9 @@ import type { AuthContext, Permission } from "../../core/auth/types";
 import type { UserController } from "./UserController";
 import { createAuthenticateMiddleware } from "../../api/middleware/authenticate";
 import { DefaultPermissionService } from "../../core/auth/PermissionService";
+import { UserService } from "./UserService";
+import { audit } from "../../core/audit/auditMiddleware";
+import { AuditLogService } from "../../core/audit/AuditLogService";
 
 const permissions = new DefaultPermissionService(); // type assertion
 
@@ -43,6 +46,8 @@ function withPermission(permission: Permission) {
 export function createUserRoutes(controller: UserController, auth: any) {
   const router = Router();
   const authenticate = createAuthenticateMiddleware(auth);
+  const usersService = new UserService(auth.db, auth.licenseService);
+  const auditService = new AuditLogService(auth.db);
 
   router.get(
     "/",
@@ -78,6 +83,27 @@ export function createUserRoutes(controller: UserController, auth: any) {
     withPermission("users.manage"),
     controller.delete
   );
+
+  router.post("/:id/deactivate", audit("deactivate", "user")(auditService), async (req, res) => {
+    try {
+      await usersService.deactivateUser(Number(req.params.id));
+      return res.json({ ok: true });
+    } catch (err) {
+      console.error("DEACTIVATE ERROR:", err);
+      return res.status(500).json({ error: "Failed to deactivate user" });
+    }
+  });
+
+  router.post("/:id/activate", audit("activate", "user")(auditService), async (req, res) => {
+    try {
+      await usersService.activateUser(Number(req.params.id));
+      return res.json({ ok: true });
+    } catch (err) {
+      console.error("ACTIVATE ERROR:", err);
+      return res.status(500).json({ error: "Failed to activate user" });
+    }
+  });
+
 
   return router;
 }

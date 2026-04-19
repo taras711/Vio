@@ -9,26 +9,31 @@ const api = axios.create({
 
 
 api.interceptors.request.use((config) => {
-const csrf = Cookies.get("csrfToken");
-if (csrf) config.headers["x-csrf-token"] = csrf;
-
-  if (csrf) {
-    config.headers["x-csrf-token"] = csrf;
-  }
+  const csrf = Cookies.get("csrfToken");
+  if (csrf) config.headers["x-csrf-token"] = csrf;
 
   return config;
 });
-
-
 
 // RESPONSE: zachytíme 401 a zkusíme refresh
 let isRefreshing = false;
 let queue: any[] = [];
 
 api.interceptors.response.use(
-  res => res,
+  (response) => {
+    const csrf = response.headers["x-csrf-token"];
+    if (csrf) {
+      Cookies.set("csrfToken", csrf);
+    }
+    return response;
+  },
   async (error) => {
+    const csrf = error.response?.headers?.["x-csrf-token"];
     const original = error.config;
+    
+    if (csrf) {
+      Cookies.set("csrfToken", csrf);
+    }
 
     // login ani refresh neřešíme přes interceptor
     if (original.url?.includes("/auth/login") || original.url?.includes("/auth/refresh")) {

@@ -117,4 +117,26 @@ export class UserService {
   async delete(id: string): Promise<void> {
     await this.db.delete(TABLES.users, { id });
   }
+
+  /**
+   * Deactivates a user.
+   * Sets the isActive field to false and the lastDeactivatedAt field to the current timestamp.
+   * @param id - The id of the user to deactivate.
+   * @returns A promise that resolves when the user has been deactivated.
+   */
+  async deactivateUser(id: number): Promise<void> {
+    const now = Date.now();
+    await this.db.update(TABLES.users, { id }, { isActive: false, lastDeactivatedAt: now });
+  }
+
+  /**
+   * Activates a user.
+   * Sets the isActive field to true and the lastDeactivatedAt field to null.
+   * @param id - The id of the user to activate.
+   * @returns A promise that resolves when the user has been activated.
+   */
+  async activateUser(id: number): Promise<void> {
+    await this.db.update(TABLES.users, { id }, { isActive: true, lastDeactivatedAt: null });
+  }
+
 }

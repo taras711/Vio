@@ -132,6 +132,7 @@ try {
   db = await createDatabaseAdapter(dbConfig);
 
   const config = loadServerConfig();
+
   if (!config) {
     console.warn("No server.json config, running without normal routes.");
   } else {
@@ -150,7 +151,7 @@ app.use(csurf({
     key: "csrfToken",
     httpOnly: false,
     secure: false,
-    sameSite: "strict",
+    sameSite: "lax",
     path: "/"
   }
 }));

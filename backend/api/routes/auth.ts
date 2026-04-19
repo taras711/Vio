@@ -1,12 +1,25 @@
-// api/routes/auth.ts
+/**
+ * @module api/routes/auth
+ * @description This file contains the routes for the authentication module.
+ */
 import { Router } from "express";
 import type { AuthService } from "../../core/auth/AuthService";
+import { createGlobalRateLimit, loginRateLimit, refreshRateLimit } from "../../core/middleware/rateLimit";
 
+/**
+ * Creates a router for the authentication module.
+ * The router contains two endpoints: POST /api/auth/login and POST /api/auth/refresh.
+ * The login endpoint logs in a user with their email and password, and returns an access token and a refresh token.
+ * The refresh endpoint refreshes an access token and a refresh token.
+ * Both endpoints are protected with rate limiting.
+ * @param auth - The authentication service.
+ * @returns - The router for the authentication module.
+ */
 export function createAuthRouter(auth: AuthService) {
   const router = Router();
 
-  // POST /api/auth/login
-  router.post("/login", async (req, res) => {
+//------------------------------------------------------- POST /api/auth/login
+  router.post("/login", loginRateLimit, async (req, res) => {
     const { email, password } = req.body ?? {};
 
     if (!email || !password) {
@@ -19,25 +32,25 @@ export function createAuthRouter(auth: AuthService) {
       // refresh token → httpOnly cookie
       res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
-        secure: false,       // v produkci true
-        sameSite: "strict",
+        secure: false,       // in production true
+        sameSite: "lax",
         path: "/api/auth/refresh"
       });
 
-      // access token → taky httpOnly cookie
+      // access token → httpOnly cookie
       res.cookie("accessToken", accessToken, {
         httpOnly: true,
-        secure: false,       // v produkci true
-        sameSite: "strict",
+        secure: false,       // in production true
+        sameSite: "lax",
         path: "/"
       });
 
-      // csurf se řeší jinde, tady už nic neposíláme
+      // return ok response
       return res.json({ ok: true });
 
     } catch (err: any) {
       console.error("LOGIN ERROR:", err);
-
+      // handle errors
       if (err.message === "USER_NOT_FOUND" || err.message === "INVALID_PASSWORD") {
         return res.status(401).json({ error: "Invalid email or password" });
       }
@@ -50,8 +63,8 @@ export function createAuthRouter(auth: AuthService) {
     }
   });
 
-  // POST /api/auth/refresh
-  router.post("/refresh", async (req, res) => {
+//------------------------------------------------------- POST /api/auth/refresh
+  router.post("/refresh", refreshRateLimit, async (req, res) => {
     const refreshToken = req.cookies?.refreshToken;
 
     if (!refreshToken) {
@@ -61,23 +74,23 @@ export function createAuthRouter(auth: AuthService) {
     try {
       const { accessToken, refreshToken: newRefresh } = await auth.refresh(refreshToken);
 
-      // obnovit refresh cookie
+      // Update refresh token cookie in English
       res.cookie("refreshToken", newRefresh, {
         httpOnly: true,
-        secure: false,       // v produkci true
-        sameSite: "strict",
+        secure: false,       // in production true
+        sameSite: "lax",
         path: "/api/auth/refresh"
       });
 
-      // obnovit access token cookie
+      // Update access token cookie
       res.cookie("accessToken", accessToken, {
         httpOnly: true,
-        secure: false,
-        sameSite: "strict",
+        secure: false,       // in production true
+        sameSite: "lax",
         path: "/"
       });
 
-      return res.json({ ok: true });
+      return res.json({ ok: true }); // return ok response
 
     } catch {
       return res.status(401).json({ error: "Invalid refresh token" });

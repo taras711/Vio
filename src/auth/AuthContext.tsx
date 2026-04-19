@@ -36,9 +36,6 @@ useEffect(() => {
   async function login(email: string, password: string) {
     const res = await api.post("/auth/login", { email, password });
 
-    // ❗ access token a csrf token NEUKLÁDAT do localStorage
-    // BE je musí poslat v secure httpOnly cookies
-
     const me = await api.get("/auth/me");
     setUser(me.data);
   }

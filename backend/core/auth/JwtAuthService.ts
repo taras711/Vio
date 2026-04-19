@@ -37,6 +37,7 @@ interface JwtPayload {
   role: string;
   permissions?: string[];
   type: "access" | "refresh";
+  iat: number;
   jti: string;       // JWT standard claim
   exp?: number;
 }
@@ -101,6 +102,7 @@ export class JwtAuthService implements AuthService {
       role: user.role,
       permissions,
       type: "access",
+      iat: Math.floor(Date.now() / 1000),
       jti: crypto.randomUUID(),
     }, this.config.accessTokenTtlSeconds);
 
@@ -109,6 +111,7 @@ export class JwtAuthService implements AuthService {
       sub: String(user.id),
       role: user.role,
       type: "refresh",
+      iat: Math.floor(Date.now() / 1000),
       jti: crypto.randomUUID(),
     }, this.config.refreshTokenTtlSeconds);
 
@@ -155,6 +158,7 @@ export class JwtAuthService implements AuthService {
       role: user.role,
       permissions,
       type: "access",
+      iat: Math.floor(Date.now() / 1000),
       jti: crypto.randomUUID(),
     }, this.config.accessTokenTtlSeconds);
 
@@ -163,6 +167,7 @@ export class JwtAuthService implements AuthService {
       sub: String(user.id),
       role: user.role,
       type: "refresh",
+      iat: Math.floor(Date.now() / 1000),
       jti: crypto.randomUUID(),
     }, this.config.refreshTokenTtlSeconds);
 
@@ -185,6 +190,15 @@ export class JwtAuthService implements AuthService {
 
     // Verify if the access token is revoked
     if (payload.jti && this.revokedAccessCache.has(payload.jti)) {
+      return null;
+    }
+    // Check if the user exists
+    const user = await this.findUserById(payload.sub);
+    if (!user || !user.isActive) {
+      return null; // deactive user or user not found
+    }
+    // Check if the user is deactivated
+    if (user.lastDeactivatedAt && payload.iat * 1000 < user.lastDeactivatedAt) {
       return null;
     }
     // Verify if the access token is revoked
@@ -345,4 +359,5 @@ export class JwtAuthService implements AuthService {
   private async findUserById(id: string): Promise<User | null> {
     return this.db.findOne<User>(TABLES.users, { id });
   }
+  
 }

@@ -36,6 +36,7 @@
     "csurf": "^1.11.0",
     "dotenv": "^17.4.1",
     "express": "^5.2.1",
+    "express-rate-limit": "^8.3.2",
     "helmet": "^8.1.0",
     "js-cookie": "^3.0.5",
     "jsonwebtoken": "^9.0.3",
