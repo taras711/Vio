@@ -11,6 +11,7 @@ import "../App.css";
 
 import { AuthProvider } from "../auth/AuthContext";
 import { Loading } from "@core/ui/primitives/Loading";
+import { ErrorBoundary } from "./ErrorBoundary";
 
 export function App() {
   const [loading, setLoading] = useState(true);
@@ -61,7 +62,7 @@ useEffect(() => {
         description="Trying to reconnect…"
       >
         <div className="av-logo">
-          <img src={NoConnection} style={{ marginTop: 40 }} />
+          <img src={NoConnection} />
           {reconnecting && <div className="av-load"></div>}
         </div>
       </NotificationPage>
@@ -76,7 +77,7 @@ useEffect(() => {
         description="The server is running, but the database is not available."
       >
         <div className="av-logo">
-          <img src={NoConnection} style={{ marginTop: 40 }} />
+          <img src={NoConnection} />
             {reconnecting && <div className="av-load"></div>}
           </div>
       </NotificationPage>
@@ -89,11 +90,17 @@ if (setup === false) {
     </UIProvider>
   );
 }
-  return (
+return (
+  <ErrorBoundary>
     <AuthProvider>
-      <UIProvider>
-        <RouterProvider router={router} />
-      </UIProvider>
+      <ErrorBoundary>
+        <UIProvider>
+          <ErrorBoundary>
+            <RouterProvider router={router} />
+          </ErrorBoundary>
+        </UIProvider>
+      </ErrorBoundary>
     </AuthProvider>
-  );
+  </ErrorBoundary>
+);
 }

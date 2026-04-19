@@ -3,8 +3,10 @@ import type { Request, Response, NextFunction } from "express";
 import type { AuthService } from "../../core/auth/AuthService";
 import type { Role, Permission } from "../../core/auth/types";
 import type { AuthContext } from "../../core/auth/types";
+import { UserService } from "../../modules/users/UserService";
 
-export function createAuthenticateMiddleware(auth: AuthService) {
+
+export function createAuthenticateMiddleware(auth: AuthService, db: any, licenseService: any) {
   return async function authenticate(req: Request, res: Response, next: NextFunction) {
     const header = req.headers.authorization;
 
@@ -18,11 +20,18 @@ export function createAuthenticateMiddleware(auth: AuthService) {
     if (!ctx) {
       return res.status(401).json({ error: "Invalid token" });
     }
+    
+    const userService = new UserService(db, licenseService);
+
+    const user = await userService.getById(ctx.userId);
+    if (!user) {
+      return res.status(401).json({ error: "User not found" });
+    }
 
 req.auth = {
   userId: ctx.userId,
-  role: toRole(ctx.role),
-  permissions: ctx.permissions,
+  role: toRole(user.role),
+  permissions: user.permissions || [],
   type: ctx.type,
   sub: ctx.sub
 } as AuthContext;

@@ -6,8 +6,8 @@ import { Unplug } from "lucide-react"
 export function NotificationPage({ message, description, children}: {message?: string, description?: string, children?: React.ReactNode}) {
     return (
         <Box className="notification-page">
-            <Box style={{textAlign: "center", position: "relative"}}>
-                <Box sx={{ display: "flex", justifyContent: "center", color: "#758c9d;", alignItems: "center", gap: 2 }}>
+            <Box style={{display: "flex", flexDirection: "column", textAlign: "center", position: "relative"}}>
+                <Box sx={{ display: "flex", justifyContent: "center", color: "#758c9d;", alignItems: "center", gap: 2}}>
                     <Unplug />
                     <Typography
                         className="notification-page-title"
@@ -16,9 +16,11 @@ export function NotificationPage({ message, description, children}: {message?: s
                     >
                         {message}
                     </Typography>
-                    </Box>
+                </Box>
                 <Typography color="#c3cfd4" variant="subtitle1">{description}</Typography>
+                <Box sx={{ marginTop: 6 }}>
                 {children}
+                </Box>
             </Box>
             <InfoBar>
                 <Typography variant="body2">Version: {APP_VERSION}</Typography>

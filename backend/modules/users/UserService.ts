@@ -22,9 +22,11 @@ export class UserService {
    * @returns A promise that resolves with an array of users.
    */
   async getAll(page = 1, limit = 50): Promise<User[]> {
-    const offset = (page - 1) * limit; // Calculate the offset
-    return this.db.find<User>(TABLES.users, {}, { limit, offset }); // Get the users
+    const offset = (page - 1) * limit;
+    const rows = await this.db.find<User>(TABLES.users, {}, { limit, offset });
+    return rows.map(mapUser);
   }
+
 
   /**
    * Finds a user by id.
@@ -33,7 +35,8 @@ export class UserService {
    * @returns A promise that resolves to the user if found, or null if not found.
    */
   async getById(id: string): Promise<User | null> {
-    return this.db.findOne<User>(TABLES.users, { id });
+    const user = await this.db.findOne<User>(TABLES.users, { id });
+    return user ? mapUser(user) : null;
   }
 
   /**
@@ -42,8 +45,9 @@ export class UserService {
    * @param email - The email of the user to find.
    * @returns A promise that resolves to the user if found, or null if not found.
    */
-  findByEmail(email: string): Promise<User | null> {
-    return this.db.findOne<User>(TABLES.users, { email });
+  async findByEmail(email: string): Promise<User | null> {
+    const user = await this.db.findOne<User>(TABLES.users, { email });
+    return user ? mapUser(user) : null;
   }
   
   /**
@@ -139,4 +143,17 @@ export class UserService {
     await this.db.update(TABLES.users, { id }, { isActive: true, lastDeactivatedAt: null });
   }
 
+}
+
+// ------------------ Helper functions ------------------
+/**
+ * Maps a user object from the database to a User object.
+ * @param u - The user object from the database.
+ * @returns A User object with the permissions field parsed from a JSON string.
+ */
+function mapUser(u: any): User {
+  return {
+    ...u,
+    permissions: JSON.parse(u.permissions || "[]")
+  };
 }

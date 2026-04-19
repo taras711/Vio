@@ -8,6 +8,7 @@ import { SideBar } from "./Sidebar";
 import { RightPanel } from "./RightPanel";
 import { PageHeaderPanel } from "./PageHeaderPanel";
 import type { RouteHandle } from "@app/routes/types";
+import { SectionErrorBoundary } from "@app/SectionErrorBoundary";
 
 function buildBreadcrumbs(meta: any, params: any, t: (key: string) => string) {
   const items = [];
@@ -139,8 +140,9 @@ export function PageLayout() {
               breadcrumbs={breadcrumbs}
             />
           )}
-
-          <Outlet />
+          <SectionErrorBoundary label="Base layout">
+            <Outlet />
+          </SectionErrorBoundary>
         </Box>
       </Box>
 

@@ -7,6 +7,7 @@ import { Box, List, ListItemButton, ListItemText, ListItemIcon, IconButton, Tool
 import { MANAGEMENT_CATEGORIES } from "./ManagenmentCategories";
 import Collapse from "@mui/material/Collapse";
 import ManagementContent from "./ManagementContent";
+import { SectionErrorBoundary } from "@app/SectionErrorBoundary";
 
 export function Component() {
     const [active, setActive] = useState<string | undefined>("users");
@@ -134,7 +135,9 @@ export function Component() {
 
         {/* Hlavní obsah */}
         <Box sx={{ flex: 1 }}>
+          <SectionErrorBoundary label="Management panel">
             <ManagementContent active={active} subActive={subActive} />
+          </SectionErrorBoundary>
         </Box>
     </Box>
   );

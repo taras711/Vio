@@ -13,9 +13,11 @@ export function createMachineRoutes(
 ) {
   const router = Router();
   const permissions = new DefaultPermissionService();
+  const db = auth.db;
+  const licenseService = auth.licenseService;
 
   // 1) Autentizace
-  router.use(createAuthenticateMiddleware(auth));
+  router.use(createAuthenticateMiddleware(auth, db, licenseService));
 
   // 2) Čtení – bez audit logu
   router.get(

@@ -28,7 +28,7 @@ export function createAuthController(
   const auditService = new AuditLogService(db);
   const authService = new JwtAuthService(db, config.security);
   const userService = new UserService(db, licenseService);
-  const authenticate = createAuthenticateMiddleware(authService);
+  const authenticate = createAuthenticateMiddleware(authService, db, licenseService);
 
   // -------------------------------------------------------
   // GET /api/auth/me
