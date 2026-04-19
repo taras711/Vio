@@ -6,4 +6,4 @@ CREATE TABLE IF NOT EXISTS shifts (
     createdAt BIGINT NOT NULL,
     updatedAt BIGINT NOT NULL,
     PRIMARY KEY (id)
-)
+);

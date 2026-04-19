@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS tasks (
     priority ENUM('low', 'medium', 'high', 'critical') NOT NULL,
     description TEXT NOT NULL,
     sectorId VARCHAR(36) NOT NULL,
-    assignedTo VARCHAR(36),
+    assignedTo VARCHAR(36) NULL,
     forMachineId VARCHAR(36) NULL,
     forShiftId VARCHAR(36) NULL,
     forZoneId VARCHAR(36) NULL,
@@ -20,4 +20,4 @@ CREATE TABLE IF NOT EXISTS tasks (
     createdAt BIGINT NOT NULL,
     updatedAt BIGINT NOT NULL,
     PRIMARY KEY (id)
-)
+);

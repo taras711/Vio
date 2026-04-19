@@ -12,4 +12,4 @@ CREATE TABLE IF NOT EXISTS forms (
     createdAt BIGINT NOT NULL,
     updatedAt BIGINT NOT NULL,
     PRIMARY KEY (id)
-)
+);

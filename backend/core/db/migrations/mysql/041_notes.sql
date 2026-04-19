@@ -7,4 +7,4 @@ CREATE TABLE IF NOT EXISTS notes (
     createdAt BIGINT NOT NULL,
     updatedAt BIGINT NOT NULL,
     PRIMARY KEY (id)
-)
+);
