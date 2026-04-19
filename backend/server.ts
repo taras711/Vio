@@ -148,8 +148,8 @@ app.use("/api/auth", createAuthRouter(auth));
 // CSRF PROTECTION – musí být až po login/refresh
 app.use(csurf({
   cookie: {
-    key: "csrfToken",
-    httpOnly: false,
+    key: "_csrfSecret",
+    httpOnly: true,
     secure: false,
     sameSite: "lax",
     path: "/"
@@ -177,7 +177,7 @@ app.use("/api/auth", (req, res, next) => {
       if (!setup.isConfigured()) return next();
       const userService = new UserService(db, licenseService);
       const userController = new UserController(userService);
-      return createUserRoutes(userController, auth!)(req, res, next);
+      return createUserRoutes(userController, auth!, db, licenseService)(req, res, next);
     });
 
      // LICENSE

@@ -7,7 +7,7 @@ import { createUserRoutes } from "./userRoutes";
 export function createUserModule(deps: any) {
   const service = new UserService(deps.db, deps.license);
   const controller = new UserController(service);
-  const routes = createUserRoutes(controller, deps.auth);
+  const routes = createUserRoutes(controller, deps.auth, deps.db, deps.license);
 
   return {
     name: "users",

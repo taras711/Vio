@@ -35,6 +35,10 @@ api.interceptors.response.use(
       Cookies.set("csrfToken", csrf);
     }
 
+    if (original.url?.includes("/auth/refresh")) {
+      window.dispatchEvent(new Event("force-logout"));
+    }
+
     // login ani refresh neřešíme přes interceptor
     if (original.url?.includes("/auth/login") || original.url?.includes("/auth/refresh")) {
       return Promise.reject(error);

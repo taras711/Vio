@@ -33,6 +33,16 @@ useEffect(() => {
     });
 }, []);
 
+useEffect(() => {
+  function handleForceLogout() {
+    setUser(null);
+  }
+
+  window.addEventListener("force-logout", handleForceLogout);
+  return () => window.removeEventListener("force-logout", handleForceLogout);
+}, []);
+
+
   async function login(email: string, password: string) {
     const res = await api.post("/auth/login", { email, password });
 
