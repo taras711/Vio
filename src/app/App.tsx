@@ -96,11 +96,11 @@ return (
     <AuthProvider>
       <ErrorBoundary>
         <PermissionProvider>
-        <UIProvider>
-          <ErrorBoundary>
-            <RouterProvider router={router} />
-          </ErrorBoundary>
-        </UIProvider>
+          <UIProvider>
+            <ErrorBoundary>
+              <RouterProvider router={router} />
+            </ErrorBoundary>
+          </UIProvider>
         </PermissionProvider>
       </ErrorBoundary>
     </AuthProvider>
