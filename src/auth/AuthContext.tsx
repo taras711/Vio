@@ -1,8 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import api from "../utils/api";
 
-
-
 interface AuthContextType {
   user: any;
   login: (email: string, password: string) => Promise<void>;
@@ -51,7 +49,13 @@ useEffect(() => {
   }
 
 
-  function logout() {
+  async function logout() {
+    try {
+      await api.post("/auth/logout");
+    } catch (e) {
+      console.warn("Logout failed:", e);
+    }
+
     setUser(null);
   }
 

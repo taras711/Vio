@@ -39,3 +39,5 @@ export const refreshRateLimit = rateLimit({
   standardHeaders: true,
   legacyHeaders: false
 });
+
+export const globalRateLimit = createGlobalRateLimit(60_000, 100); // 100 requests per minute globally

@@ -4,7 +4,7 @@
  */
 import { Router } from "express";
 import type { AuthService } from "../../core/auth/AuthService";
-import { createGlobalRateLimit, loginRateLimit, refreshRateLimit } from "../../core/middleware/rateLimit";
+import { globalRateLimit, loginRateLimit, refreshRateLimit } from "../../core/middleware/rateLimit";
 
 /**
  * Creates a router for the authentication module.
@@ -95,6 +95,31 @@ export function createAuthRouter(auth: AuthService) {
     } catch {
       return res.status(401).json({ error: "Invalid refresh token" });
     }
+  });
+
+  router.post("/logout", globalRateLimit, async (req, res) => {
+  const refreshToken = req.cookies.refreshToken;
+
+  if (refreshToken) {
+    await auth.revokeRefreshToken(refreshToken);
+  }
+
+  res.cookie("refreshToken", "", {
+    httpOnly: true,
+    secure: false,       // in production true
+    sameSite: "lax",
+    path: "/api/auth/refresh"
+  });
+
+  // Update access token cookie
+  res.cookie("accessToken", "", {
+    httpOnly: true,
+    secure: false,       // in production true
+    sameSite: "lax",
+    path: "/"
+  });
+
+  return res.json({ ok: true });
   });
 
   return router;
