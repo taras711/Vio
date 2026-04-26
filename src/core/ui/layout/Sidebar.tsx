@@ -32,8 +32,8 @@ export function SideBar({ open }: { open: boolean }) {
 
   const logo = license?.type ? logoMap[license.type] || trialLogo : trialLogo;
   console.log("NAVIGATE:", navigate);
-  function handleLogout() {
-    logout();
+  async function handleLogout() {
+    await logout();
     navigate("/login", { replace: true });
   }
 
