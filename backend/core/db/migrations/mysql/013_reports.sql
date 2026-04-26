@@ -5,12 +5,12 @@ CREATE TABLE IF NOT EXISTS reports (
     shiftId VARCHAR(36) NOT NULL,
     assetId VARCHAR(36) NOT NULL,
     shiftType VARCHAR(255) NOT NULL,
-    status VARCHAR(255) NOT NULL,
-    date BIGINT NOT NULL,
+    `status` VARCHAR(255) NOT NULL,
+    `date` BIGINT NOT NULL,
     proposedSolution VARCHAR(255),
     zoneId VARCHAR(36),
     message TEXT(999),
     createdAt BIGINT NOT NULL,
     updatedAt BIGINT NOT NULL,
     PRIMARY KEY (id)
-)
+);

@@ -24,3 +24,10 @@ export interface AuthContext {
   sub: string;
 
 }
+
+export interface AuthIdentity {
+  userId: string;
+  role: Role;
+  type: "access";
+  sub: string;
+}

@@ -15,7 +15,7 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import type { AuthService } from "./AuthService";
-import type { Role, Permission, AuthContext } from "./types";
+import type { Role, Permission, AuthContext, AuthIdentity } from "./types";
 import type { User } from "../users/types";
 import type { DatabaseAdapter } from "../db/DatabaseAdapter";
 import { RolePermissions } from "./RolePermissions";
@@ -36,7 +36,6 @@ interface JwtAuthConfig {
 interface JwtPayload {
   sub: string;
   role: string;
-  permissions?: string[];
   type: "access" | "refresh";
   iat: number;
   jti: string;       // JWT standard claim
@@ -108,7 +107,6 @@ export class JwtAuthService implements AuthService {
     const accessToken = this.signToken({
       sub: String(user.id),
       role: user.role,
-      permissions,
       type: "access",
       iat: Math.floor(Date.now() / 1000),
       jti,
@@ -164,7 +162,6 @@ export class JwtAuthService implements AuthService {
     const newAccessToken = this.signToken({
       sub: String(user.id),
       role: user.role,
-      permissions,
       type: "access",
       iat: Math.floor(Date.now() / 1000),
       jti: crypto.randomUUID(),
@@ -190,7 +187,7 @@ export class JwtAuthService implements AuthService {
    * @param token - The access token to verify.
    * @returns A promise that resolves to the user information if the token is valid, or null otherwise.
    */
-  async verifyAccessToken(token: string): Promise<AuthContext | null> {
+  async verifyAccessToken(token: string): Promise<AuthIdentity | null> {
     const payload = this.verifyToken(token); // Verify access token
 
     // Check if the token is an access token
@@ -213,7 +210,6 @@ export class JwtAuthService implements AuthService {
     return {
       userId: String(payload.sub),
       role: payload.role as Role,
-      permissions: (payload.permissions ?? []) as string[],
       type: payload.type,
       sub: String(payload.sub),
     };

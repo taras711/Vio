@@ -8,6 +8,8 @@ import { Component as LoginPage } from "@pages/login/Page";
 import { SetupWizard } from "@features/setup/SetupWizard";
 import { PublicRoute } from "./PublicRoute";
 import { SetupRoute } from "./SetupRoute";
+import { NotificationPage } from "@pages/notification/NotificationPage";
+import { RouteErrorPage } from "./RouteErrorPage";
 
 const pageModules = import.meta.glob("/src/core/ui/pages/**/Page.tsx", { eager: false });
 
@@ -17,11 +19,21 @@ export const router = createBrowserRouter([
   // PUBLIC ROUTES
   {
     path: "/login",
-    element: <PublicRoute><LoginPage /></PublicRoute>,
+    element: (
+        <PublicRoute>
+          <LoginPage />
+        </PublicRoute>
+    ),
+    errorElement: <RouteErrorPage />,   // 🔥 TADY
   },
   {
     path: "/setup",
-    element: <SetupRoute><SetupWizard /></SetupRoute>,
+    element: (
+        <SetupRoute>
+          <SetupWizard />
+        </SetupRoute>
+    ),
+    errorElement: <RouteErrorPage />,   // 🔥 TADY
   },
 
   // PROTECTED ROUTES
@@ -32,6 +44,7 @@ export const router = createBrowserRouter([
         <PageLayout />
       </ProtectedRoute>
     ),
+    errorElement: <RouteErrorPage />,   // 🔥 TADY
     children: [
       ...Object.values(pages).map((p) => {
         const modulePath = `/src/core/ui/pages${p.modulePath}/Page.tsx`;
@@ -40,8 +53,6 @@ export const router = createBrowserRouter([
           const mod = (await pageModules[modulePath]()) as {
             Component: React.ComponentType;
           };
-
-          // 🔥 DŮLEŽITÉ: používáme pojmenovaný export `Component`, ne `default`
           return { Component: mod.Component };
         };
 
@@ -49,14 +60,16 @@ export const router = createBrowserRouter([
           return {
             index: true,
             lazy: lazyLoader,
-            handle: { meta: p } as RouteHandle,
+            handle: { meta: p },
+            errorElement: <RouteErrorPage />,   // 🔥 TADY
           };
         }
 
         return {
           path: p.path.replace(/^\//, ""),
           lazy: lazyLoader,
-          handle: { meta: p } as RouteHandle,
+          handle: { meta: p },
+          errorElement: <RouteErrorPage />,     // 🔥 TADY
         };
       }),
     ],

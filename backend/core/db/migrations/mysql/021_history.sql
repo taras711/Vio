@@ -8,4 +8,4 @@ CREATE TABLE IF NOT EXISTS task_history (
     createdAt BIGINT NOT NULL,
     updatedAt BIGINT NOT NULL,
     PRIMARY KEY (id)
-)
+);

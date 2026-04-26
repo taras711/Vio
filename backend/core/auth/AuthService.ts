@@ -5,11 +5,11 @@
  * @returns A promise that resolves to true if the token is revoked or false otherwise.
  */
 
-import type { AuthContext } from "./types";
+import type { AuthContext, AuthIdentity } from "./types";
 
 export interface AuthService {
   login(email: string, password: string): Promise<{ accessToken: string; refreshToken: string }>;
   refresh(refreshToken: string): Promise<{ accessToken: string; refreshToken: string }>;
-  verifyAccessToken(token: string): Promise<AuthContext | null>;
+  verifyAccessToken(token: string): Promise<AuthIdentity | null>;
   revokeRefreshToken(token: string): Promise<void>;
 }

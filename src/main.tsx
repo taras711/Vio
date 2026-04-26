@@ -5,17 +5,20 @@ import { App } from "./app/App";
 import { ThemeProvider } from "@app/providers/ThemeProvider";
 import { QueryProvider } from "@app/providers/QueryProvider";
 import { ActionFeedbackProvider } from "@core/ui/hooks/ActionFeedback";
-import { ErrorBoundary } from "@app/ErrorBoundary";
+import { GlobalErrorOverlay } from "@app/GlobalErrorOverlay";
+import { RootErrorBoundary } from "@app/RootErrorBoundary";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
-
-  <ActionFeedbackProvider>
-    <ThemeProvider>
-      <QueryProvider>
-        <ErrorBoundary>
-          <App />
-        </ErrorBoundary>
-      </QueryProvider>
-    </ThemeProvider>
-  </ActionFeedbackProvider>
+  // 5. Window-level — zachytí cokoliv přes window.onerror
+  <GlobalErrorOverlay>
+    <RootErrorBoundary>
+      <ActionFeedbackProvider>
+        <ThemeProvider>
+          <QueryProvider>
+            <App />
+          </QueryProvider>
+        </ThemeProvider>
+      </ActionFeedbackProvider>
+    </RootErrorBoundary>
+  </GlobalErrorOverlay>
 );

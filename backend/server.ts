@@ -138,7 +138,7 @@ try {
   } else {
     const licenseService = new LicenseService();
     auth = new JwtAuthService(db, config.security);
-    const authenticate = createAuthenticateMiddleware(auth);
+    const authenticate = createAuthenticateMiddleware(auth, db, licenseService);
 
     
 
@@ -228,6 +228,49 @@ app.use("/api/auth", (req, res, next) => {
 
         res.status(404).json({ error: "not_found" });
     });
+
+    // Přidat na konec server.ts — MUSÍ být za všemi routami
+// a mít 4 parametry (Express ho pozná jako error middleware)
+
+app.use((err: Error, req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  const status = (err as any).status ?? (err as any).statusCode ?? 500;
+
+  // Strukturované logování — v produkci sem přijde Pino/Winston
+  const log = {
+    level: status >= 500 ? "error" : "warn",
+    message: err.message,
+    stack: process.env.NODE_ENV === "development" ? err.stack : undefined, // stack jen v dev
+    path: req.path,
+    method: req.method,
+    userId: req.auth?.userId,
+    timestamp: new Date().toISOString(),
+  };
+
+  if (status >= 500) {
+    console.error(JSON.stringify(log));
+  } else {
+    console.warn(JSON.stringify(log));
+  }
+
+  // Nikdy neposílat stack trace do produkce
+  res.status(status).json({
+    error: status >= 500 ? "Internal server error" : err.message,
+    ...(process.env.NODE_ENV === "development" && { stack: err.stack }),
+  });
+});
+
+// Uncaught synchronní výjimky — zabrání pádu celého procesu
+process.on("uncaughtException", (err) => {
+  console.error("[uncaughtException]", err);
+  // Graceful shutdown — dej time na dokončení in-flight requestů
+  setTimeout(() => process.exit(1), 1000);
+});
+
+// Neošetřené promise rejecty
+process.on("unhandledRejection", (reason) => {
+  console.error("[unhandledRejection]", reason);
+  // Neukončuj proces — pouze loguj, pokud nejde o kritickou chybu
+});
 
     app.listen(3000, () => console.log("Server listening: http://localhost:3000"));
 }

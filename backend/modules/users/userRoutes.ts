@@ -47,7 +47,7 @@ function withPermission(permission: Permission) {
  */
 export function createUserRoutes(controller: UserController, auth: any, db: DatabaseAdapter, licenseService: LicenseService) {
   const router = Router();
-  const authenticate = createAuthenticateMiddleware(auth);
+  const authenticate = createAuthenticateMiddleware(auth, db, licenseService);
   const usersService = new UserService(db, licenseService);
   const auditService = new AuditLogService(db);
 
