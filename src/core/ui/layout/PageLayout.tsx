@@ -5,9 +5,11 @@ import { useEffect } from "react";
 import { useUI } from "./ui-store";
 import { TopBar } from "./Topbar";
 import { SideBar } from "./Sidebar";
+import { TimelineProvider } from "./TimelineContext";
 import { RightPanel } from "./RightPanel";
 import { PageHeaderPanel } from "./PageHeaderPanel";
 import type { RouteHandle } from "@app/routes/types";
+import { TimelineBar } from "./TimelineBar";
 
 function buildBreadcrumbs(meta: any, params: any, t: (key: string) => string) {
   const items = [];
@@ -92,6 +94,7 @@ export function PageLayout() {
 
 
   return (
+    <TimelineProvider>
     <Box sx={{ display: "flex" }}>
       {/* Overlay only on mobile */}
       {isMobile && sidebarOpen && (
@@ -131,7 +134,9 @@ export function PageLayout() {
         }}
       >
         <TopBar />
-
+        <TimelineBar />
+        
+        
         <Box component="main" sx={{ mt: "64px", p: isMobile ? 2 : 3 }}>
           {meta && (
             <PageHeaderPanel
@@ -147,5 +152,6 @@ export function PageLayout() {
       {/* Right panel (fixed) */}
       <RightPanel />
     </Box>
+    </TimelineProvider>
   );
 }

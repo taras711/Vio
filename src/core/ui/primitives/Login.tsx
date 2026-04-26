@@ -5,6 +5,7 @@ import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { useAuth } from "../../../auth/AuthContext";
 import {SetupCard} from "@ui/primitives/WCard";
 import logo from "@assets/logo_trial.png";
+import logo_label from "@assets/logo_label.png";
 import { useNavigate } from "react-router-dom";
 import { useActionFeedback } from "@hooks/ActionFeedback";
 
@@ -44,7 +45,7 @@ return (
     headerContent={
       <>
         <img src={logo} width="50" />
-        <h3>VECTA</h3>
+        <img src={logo_label} width="50" style={{marginTop: "15px"}} />
       </>
     }
   >

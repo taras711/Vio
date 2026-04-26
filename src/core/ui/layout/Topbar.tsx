@@ -3,6 +3,7 @@ import { Box, Typography, IconButton, useMediaQuery, Avatar } from "@mui/materia
 import { useUI } from "./ui-store";
 import { UserProfile } from "@pages/UserProfile";
 import { useAuth } from "../../../auth/AuthContext";
+import { IdentificatedPeriod } from "@src/core/ui/hooks/IdentifyPeriod";
 
 export function TopBar() {
     const { toggleSidebar, openRightPanel } = useUI();
@@ -17,9 +18,8 @@ export function TopBar() {
           <Menu size={22} />
         </IconButton>
 
-        <Typography variant="h6" fontWeight={600} style={{ fontSize: isMobile ? "1rem" : "1.25rem", whiteSpace: "nowrap" }}>
-          Dobrý den, {user?.name ?? "uživateli"}
-!
+        <Typography variant="subtitle1" fontWeight={600} style={{color: "#797979",textOverflow: "ellipsis",overflow: "hidden", maxWidth: 400, fontSize: isMobile ? "1rem" : "1.25rem", whiteSpace: "nowrap" }}>
+          {IdentificatedPeriod({time: new Date().getHours()}).period}, {user?.name ?? "User"}!
         </Typography>
       </Box>
 

@@ -90,23 +90,19 @@ function formatDuration(ms: number) {
       );
     }
 
-    const startWindow = now - (windowHours / 2) * 60 * 60 * 1000;
-    const endWindow = now + (windowHours / 2) * 60 * 60 * 1000;
-    const totalMs = endWindow - startWindow;
+const startWindow = now - (windowHours / 2) * 60 * 60 * 1000;
+const endWindow = now + (windowHours / 2) * 60 * 60 * 1000;
+const totalMs = endWindow - startWindow;
 
-    return events.map((ev) => {
-  const visibleStart = Math.max(ev.start, startWindow);
-  const visibleEnd = Math.min(ev.end ?? ev.start, endWindow);
-
-  const startRatio = (visibleStart - startWindow) / totalMs;
-  const endRatio = (visibleEnd - startWindow) / totalMs;
+return events.map((ev) => {
+  const startRatio = (ev.start - startWindow) / totalMs;
+  const endRatio = ((ev.end ?? ev.start) - startWindow) / totalMs;
 
   const leftPercent = startRatio * 100;
   const widthPercent = Math.max((endRatio - startRatio) * 100, 0.5);
 
-      return (
-        <>
-        <Tooltip
+return (
+  <Tooltip
     key={ev.id}
     title={
       <Box sx={{ p: 0.5 }}>
@@ -121,36 +117,33 @@ function formatDuration(ms: number) {
     arrow
     placement="top"
   >
-        <Box
-          key={ev.id}
-          sx={{
-            position: "absolute",
-            left: `${leftPercent}%`,
-            width: `${widthPercent}%`,
-            display: "flex",
-            alignItems: "center",
-            overflow: "hidden",
-            whiteSpace: "nowrap",
-            textOverflow: "ellipsis",
-            top: `calc(50% - ${open ? 5 : 10.5}px)`,
-            padding: "5px 5px",
-            borderRadius: .5,
-            backgroundColor: getEventColor(ev),
-            opacity: getEventOpacity(ev),
-            color: "white",
-            fontSize: 11,
-            cursor: "pointer",
-            zIndex: 1
-          }}
-          onClick={() => {
-            // TODO: napojit na navigaci podle ev.source
-            handleEventClick(ev);
-          }}
-        >
-          {ev.title}
-        </Box>
-        </Tooltip></>
-      );
+    <Box
+      sx={{
+        position: "absolute",
+        left: `${leftPercent}%`,
+        width: `${widthPercent}%`,
+        display: "flex",
+        alignItems: "center",
+        overflow: "hidden",
+        whiteSpace: "nowrap",
+        textOverflow: "ellipsis",
+        top: `calc(50% - ${open ? 5 : 10.5}px)`,
+        padding: "5px 5px",
+        borderRadius: 0.5,
+        backgroundColor: getEventColor(ev),
+        opacity: getEventOpacity(ev),
+        color: "white",
+        fontSize: 11,
+        cursor: "pointer",
+        zIndex: 1,
+      }}
+      onClick={() => handleEventClick(ev)}
+    >
+      {ev.title}
+    </Box>
+  </Tooltip>
+);
+
     });
   }
 
@@ -241,10 +234,11 @@ function formatDuration(ms: number) {
             sx={{
               position: "absolute",
               top: 0,
-              left: "calc(50% - 12px)",
+              left: "50%",
               width: "1px",
               height: open ? "100%" : "40px",
               backgroundColor: "#e53935",
+              transform: "translateX(-50%)",
               zIndex: 2
             }}
           />

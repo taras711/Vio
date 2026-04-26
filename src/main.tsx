@@ -9,13 +9,13 @@ import { ErrorBoundary } from "@app/ErrorBoundary";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
 
-    <ActionFeedbackProvider>
-  <ThemeProvider>
-    <QueryProvider>
-      <ErrorBoundary>
-        <App />
-      </ErrorBoundary>
-    </QueryProvider>
-  </ThemeProvider>
+  <ActionFeedbackProvider>
+    <ThemeProvider>
+      <QueryProvider>
+        <ErrorBoundary>
+          <App />
+        </ErrorBoundary>
+      </QueryProvider>
+    </ThemeProvider>
   </ActionFeedbackProvider>
 );

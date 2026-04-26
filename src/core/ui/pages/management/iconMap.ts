@@ -1,5 +1,10 @@
 import {
   Users,
+  ContactRound,
+  Network,
+  Building2,
+  UsersRound,
+  MapPin,
   UserStar,
   UserRoundKey,
   ShieldUser,
@@ -20,6 +25,11 @@ import {
 
 export const ICON_MAP = {
   users: Users,
+  profile: ContactRound,
+  integration: Network,
+  groups: UsersRound,
+  domain: Building2,
+  sectors: MapPin,
   administration: UserRoundPen,
   role: UserStar,
   permissions: UserRoundKey,

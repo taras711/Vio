@@ -3,5 +3,6 @@ import { UsersManagement } from "./fragments/users/UsersManagement";
 import { MachinesManagement } from "./fragments/machines/MachinesManagement";
 import { SystemManagement } from "./fragments/system/SystemManagement";
 import { PluginsManagement } from "./fragments/plugins/PluginsManagement";
+import { DomainManagement } from "./fragments/domain/DomainManagement";
 
-export { UsersManagement, MachinesManagement, SystemManagement, PluginsManagement };
+export { UsersManagement, MachinesManagement, SystemManagement, PluginsManagement, DomainManagement };

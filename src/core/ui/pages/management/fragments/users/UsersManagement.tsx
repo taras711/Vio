@@ -1,15 +1,18 @@
-import { ChangeRolePanel, ChangePermissionsPanel, UserSecurityPanel, AdministrationPanel } from "./index";
+import { ChangeRolePanel, ChangePermissionsPanel, UserSecurityPanel, AdministrationPanel, ProfilesPanel } from "./index";
 import { Typography } from "@mui/material";
 export function UsersManagement({ section }: { section?: string }) {
     switch (section) {
         case "administration":
             return <AdministrationPanel />
+
+        case "profiles":
+            return <ProfilesPanel />;
         case "change-role":
             return <ChangeRolePanel />;
-
         case "change-permissions":
             return <ChangePermissionsPanel />;
-
+        case "groups":
+            return <div>groups panel</div>;
         case "lock":
             return <UserSecurityPanel />;
 

@@ -1,5 +1,5 @@
 // src/core/ui/pages/management/ManagementContent.tsx
-import { UsersManagement, MachinesManagement, SystemManagement, PluginsManagement } from "./index";
+import { UsersManagement, MachinesManagement, SystemManagement, PluginsManagement, DomainManagement } from "./index";
 export default function ManagementContent({
   active,
   subActive
@@ -20,6 +20,8 @@ export default function ManagementContent({
     case "machines":
       return <MachinesManagement section={subActive} />;
 
+    case "domain":
+      return <DomainManagement section={subActive} />;
     default:
       return null;
   }

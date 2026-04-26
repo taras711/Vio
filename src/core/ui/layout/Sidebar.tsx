@@ -10,6 +10,9 @@ import enterpriseLogo from "@assets/logo_enterprise.png";
 import { useAuth } from "../../../auth/AuthContext";
 import { useUI } from "./ui-store";
 import logoLabel from "@assets/logo_label.png";
+import { PERMISSIONS } from "../../../../shared/permissions";
+import { IfAllowed } from "@src/auth/IfAllowed";
+import { usePermission } from "@src/auth/PermissionContext";
 
 export function SideBar({ open }: { open: boolean }) {
   const { setSidebarOpen } = useUI();
@@ -25,6 +28,7 @@ export function SideBar({ open }: { open: boolean }) {
     pro: standardLogo,
     enterprise: enterpriseLogo,
   };
+  const { can } = usePermission();
 
   const logo = license?.type ? logoMap[license.type] || trialLogo : trialLogo;
   console.log("NAVIGATE:", navigate);

@@ -7,7 +7,9 @@ export const MANAGEMENT_CATEGORIES: ManagementCategory[] = [
     label: "Users",
     children: [
       { icon: "administration", id: "administration", label: "Administration" },
+      { icon: "profile", id: "profiles", label: "Profile Packages" },
       { icon: "role", id: "change-role", label: "Change Role" },
+      { icon: "groups", id: "groups", label: "Groups" },
       { icon: "permissions", id: "change-permissions", label: "Change Permissions" },
       { icon: "security", id: "lock", label: "Security" }
     ]
@@ -36,6 +38,15 @@ export const MANAGEMENT_CATEGORIES: ManagementCategory[] = [
     children: [
       { icon: "management", id: "administration", label: "Administration" },
       { icon: "maintenance", id: "maintenance", label: "Maintenance" }
+    ]
+  },
+  {
+    icon: "domain",
+    id: "domain",
+    label: "Domain",
+    children: [
+      { icon: "sectors", id: "sectors", label: "Units" },
+      { icon: "integration", id: "integration", label: "Integration" }
     ]
   }
 ];

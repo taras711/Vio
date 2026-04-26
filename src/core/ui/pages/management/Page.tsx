@@ -15,7 +15,7 @@ export function Component() {
     const isMobile = useMediaQuery("(max-width: 600px), (max-height: 600px)");
 
      return (
-    <Box sx={{ display: "flex", gap: 3 }}>
+    <Box sx={{ display: "flex", gap: 3, flexDirection: isMobile ? "column" : "row" }}>
         
         {/* Levý panel */}
         <Box
@@ -36,7 +36,7 @@ export function Component() {
                 </IconButton>
             </Tooltip>}
 
-<List disablePadding >
+<List disablePadding sx={{ display: "flex", flexDirection: isMobile ? "row" : "column" }} >
   {MANAGEMENT_CATEGORIES.map((item) => {
     const Icon = ICON_MAP[item.icon];
     const isActive = active === item.id;

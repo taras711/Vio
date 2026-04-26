@@ -11,6 +11,7 @@ import "../App.css";
 
 import { AuthProvider } from "../auth/AuthContext";
 import { Loading } from "@core/ui/primitives/Loading";
+import { PermissionProvider } from "@src/auth/PermissionContext";
 
 export function App() {
   const [loading, setLoading] = useState(true);
@@ -91,9 +92,11 @@ if (setup === false) {
 }
   return (
     <AuthProvider>
-      <UIProvider>
-        <RouterProvider router={router} />
-      </UIProvider>
+      <PermissionProvider>
+        <UIProvider>
+          <RouterProvider router={router} />
+        </UIProvider>
+      </PermissionProvider>
     </AuthProvider>
   );
 }

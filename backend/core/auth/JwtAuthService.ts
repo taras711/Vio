@@ -22,6 +22,7 @@ import { RolePermissions } from "./RolePermissions";
 import fs from "fs";
 import path from "path";
 import { TABLES } from "../db/schema/tables";
+import { PermissionResolver } from "./PermissionResolver";
 
 // Config
 interface JwtAuthConfig {
@@ -52,10 +53,12 @@ export class JwtAuthService implements AuthService {
   // Cleared on server restart.
   private revokedCache = new Set<string>();
   private revokedAccessCache = new Set<string>(); // jti access tokens
+  private resolver: PermissionResolver;
 
   constructor(db: DatabaseAdapter, config: JwtAuthConfig) {
     this.db = db;
     this.config = config;
+    this.resolver = new PermissionResolver(db);
 
     // Load private and public keys
     this.privateKey = fs.readFileSync(
@@ -71,6 +74,7 @@ export class JwtAuthService implements AuthService {
 
     // Clear expired records from the DB (periodic cleanup)
     setInterval(() => this.cleanExpiredTokens(), 60 * 60 * 1000);
+    
   }
 
   // ── LOGIN ──────────────────────────────────────────────────────────────────
@@ -94,8 +98,12 @@ export class JwtAuthService implements AuthService {
     const ok = await bcrypt.compare(password, user.passwordHash);
     if (!ok) throw new Error("INVALID_PASSWORD");
 
-    const permissions = this.getPermissions(user.role);
+    const resolved = await this.resolver.resolveForUser(String(user.id));
+    if (user.role === "superadmin") resolved.add("*");
 
+    //const permissions = this.getPermissions(user.role);
+    const permissions = Array.from(resolved);
+    const jti = crypto.randomUUID();
     // Clear revoked tokens cache
     const accessToken = this.signToken({
       sub: String(user.id),
@@ -103,7 +111,7 @@ export class JwtAuthService implements AuthService {
       permissions,
       type: "access",
       iat: Math.floor(Date.now() / 1000),
-      jti: crypto.randomUUID(),
+      jti,
     }, this.config.accessTokenTtlSeconds);
 
     // Clear revoked tokens cache (refresh token rotation)
