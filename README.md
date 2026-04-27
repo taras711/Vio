@@ -1,187 +1,140 @@
-Vio
+Meris
 
 Overview
 
-Vio is a modular backend-frontend platform for managing and controlling operational entities (e.g. devices, areas, components) within a single consistent system.
+Meris is a system for managing, structuring and monitoring operational entities within an organized environment (e.g. production, infrastructure, technical units).
 
-The goal is not just data recording, but controlled work with them:
+It allows you to model the real world using:
 
-- defined relationships between entities
+- hierarchical structure (areas, zones, sectors)
+
+- devices and their components
 
 - access and authorization control
-- auditability of changes
-- extensibility using modules
 
-Vio is aimed at the role of an internal operational platform, not a general framework.
+- auditable change history
 
----
-
-Core Principles
-
-1. Modularity
-
-The system is divided into:
-
-- core – infrastructure (auth, DB, permissions, audit, licensing)
-- modules – domain logic (e.g. machines, users, areas)
-
-Modules are isolated and communicate via defined interfaces.
+Meris is designed as a foundation for internal operational systems where control over data, relationships and changes is key.
 
 ---
 
-2. Domain Model
+Core Capabilities
 
-Vio works with a hierarchical and relational entity model, typically:
+Environment Structuring
 
-- Area / Zone / Sector
+- Hierarchical Division (Area → Zone → Sector)
 
-- Machine / Component
-
-- User / Role
-
-The model is designed to allow:
-
-- mapping of real traffic
-
-- expansion without interfering with the core
+- Physical or Logical Space Mapping
 
 ---
 
-3. Access Control (RBAC)
+Entity Management
 
-Access to data and operations is controlled via:
+- Device Registration (Machine)
 
-- roles
+Component Management
 
-- permissions
+- Entity Relationships
 
-- resolver logic
-
-Frontend and backend share the same permission model.
+- Location within the Structure
 
 ---
 
-4. Auditability
+Access Control
 
-Every significant operation can be:
+- Role-Based Access Control (RBAC)
 
-- recorded
+- Central Permission Management
 
-- traceable
-
-- traceable
+- Shared Model between Backend and Frontend
 
 ---
 
-5. Extensibility
+Audit and History
 
-System functionality is extended through modules:
+- Change Tracking
 
-- each module contains its own logic, API and possibly UI
+Operation Logging
 
-- core provides infrastructure, not business logic
+Traceability of User Actions
 
 ---
 
 Architecture
 
-backend/
-core/
-auth/
-db/
-permissions/
-audit/
-modules/
-modules/
-<domain-modules>
-api/
+Meris is divided into:
 
-frontend/
-core/
-modules/
+- Core
+System Infrastructure (Database, Authentication, Permissions, Audit, Licensing)
 
-shared/
-permissions/
-version/
+- Modules
+Domain Logic (e.g. Device Management, Structures)
+
+- API
+Client Entry Point
+
+- Frontend
+React Application with Connection to Permission System
+
+The Architecture is Modular, but Controlled by a Central Data Center model.
 
 ---
 
-Database Layer
+Database
 
-Vio includes an abstraction layer for multiple databases (e.g. SQL and NoSQL).
+The database layer forms the basis of the system:
 
-⚠️ Current status:
+- defines the domain model
+- contains relationships between entities
+- implements data historization
 
-- multiple adapters exist
-- full compatibility between databases is not guaranteed
+Migration serves as the main source of truth about the system structure.
 
-Recommendation:
-
-- use one primary database for production deployment
+⚠️ The system contains multiple database adapters, but it is recommended to use one primary database.
 
 ---
 
 Current Status
 
-The project is in the phase:
-
-«WIP (Work in Progress)»
-
-- architecture is defined
-- basic modules exist
-- system is not yet stabilized for production use
+- extensive data model is implemented
+- backend infrastructure exists
+- frontend is functional, but under development
+- project is not ready for production deployment
 
 ---
 
-What Vio is NOT
+Intended Use
 
-- not a low-code platform
-- not a universal framework for any project
-- not a finished product
+Meris is suitable as a basis for:
 
----
-
-Roadmap (high-level)
-
-- stabilization of the domain model
-- definition of a clear use-case
-- simplification of the database layer
-- documentation of modules
-- creation of a “golden path” scenario
+- facility and infrastructure management
+- accounting and operational systems
+- internal business applications
+- systems requiring auditability
 
 ---
 
-Getting Started (conceptual)
+Limitations
 
-1. Start the backend
-2. Initialize the database
-3. Log in as admin
-4. Work with entities via modules
-
-(exact steps will be added)
+- complex data model → higher maintenance requirements
+- partly experimental architectural decisions
+- insufficient documentation
 
 ---
 
-Philosophy
+Direction
 
-Vio is not designed as a quick fix for a single problem.
+Further development focuses on:
 
-It is an attempt to create a long-term sustainable operational platform where:
-
-- data has structure
-
-- operations have rules
-
-- the system is auditable
-
-The price for this is higher complexity, which must be managed by documentation and clear scope.
+- refinement of specific use-case
+- simplification of architecture
+- stabilization of database layer
+- creation of clear workflow
 
 ---
 
-Author Notes
+Summary
 
-The project is actively developed and the architecture may change.
+Meris is a data-oriented system for managing and monitoring a structured environment and its entities, with an emphasis on relationships, control and history.
 
-The goal is to gradually move:
-
-«from “system” → to “product”»
+The goal is to gradually move from an internal system to a stable product.
