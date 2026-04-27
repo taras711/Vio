@@ -2,13 +2,11 @@
 import { createBrowserRouter } from "react-router-dom";
 import { PageLayout } from "@ui/layout/PageLayout";
 import { pages } from "./registry";
-import type { RouteHandle } from "./types";
 import { ProtectedRoute } from "./ProtectedRoute";
 import { Component as LoginPage } from "@pages/login/Page";
 import { SetupWizard } from "@features/setup/SetupWizard";
 import { PublicRoute } from "./PublicRoute";
 import { SetupRoute } from "./SetupRoute";
-import { NotificationPage } from "@pages/notification/NotificationPage";
 import { RouteErrorPage } from "./RouteErrorPage";
 
 const pageModules = import.meta.glob("/src/core/ui/pages/**/Page.tsx", { eager: false });
@@ -36,6 +34,7 @@ export const router = createBrowserRouter([
     errorElement: <RouteErrorPage />,   // 🔥 TADY
   },
 
+
   // PROTECTED ROUTES
   {
     path: "/",
@@ -44,34 +43,50 @@ export const router = createBrowserRouter([
         <PageLayout />
       </ProtectedRoute>
     ),
-    errorElement: <RouteErrorPage />,   // 🔥 TADY
-    children: [
-      ...Object.values(pages).map((p) => {
-        const modulePath = `/src/core/ui/pages${p.modulePath}/Page.tsx`;
+    errorElement: <RouteErrorPage />,
+children: [
 
-        const lazyLoader = async () => {
-          const mod = (await pageModules[modulePath]()) as {
-            Component: React.ComponentType;
-          };
-          return { Component: mod.Component };
-        };
+{
+  path: "new/:type",
+  lazy: async () => {
+    const mod = await import("@pages/new/CreatePage");
+    return { Component: mod.Component };
+  },
+  handle: {
+    meta: {
+      path: "/new/:type",
+      titleKey: "addCreate.title",
+      breadcrumbKey: "addCreate.breadcrumb",
+    }
+  }
+},
+  ...Object.values(pages).map((p) => {
+    const modulePath = `/src/core/ui/pages${p.modulePath}/Page.tsx`;
 
-        if (p.path === "/dashboard") {
-          return {
-            index: true,
-            lazy: lazyLoader,
-            handle: { meta: p },
-            errorElement: <RouteErrorPage />,   // 🔥 TADY
-          };
-        }
+    const lazyLoader = async () => {
+      const mod = (await pageModules[modulePath]()) as {
+        Component: React.ComponentType;
+      };
+      return { Component: mod.Component };
+    };
 
-        return {
-          path: p.path.replace(/^\//, ""),
-          lazy: lazyLoader,
-          handle: { meta: p },
-          errorElement: <RouteErrorPage />,     // 🔥 TADY
-        };
-      }),
-    ],
+    if (p.path === "/dashboard") {
+      return {
+        index: true,
+        lazy: lazyLoader,
+        handle: { meta: p },
+        errorElement: <RouteErrorPage />,
+      };
+    }
+
+    return {
+      path: p.path.replace(/^\//, ""),
+      lazy: lazyLoader,
+      handle: { meta: p },
+      errorElement: <RouteErrorPage />,
+    };
+  }),
+]
+
   },
 ]);

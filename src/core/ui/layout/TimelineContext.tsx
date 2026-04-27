@@ -1,11 +1,14 @@
-import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { TimelineEvent } from "@src/types/timelineEvent";
-import api from "../../../utils/api"; // podle toho, kde máš axios instance
+import api from "../../../utils/api";
 import { useAuth } from "@src/auth/AuthContext";
-import { usePermission } from "@src/auth/PermissionContext";
+
+// ─── context shape ───────────────────────────────────────────────────────────
 
 interface TimelineContextType {
   events: TimelineEvent[];
+  loading: boolean;
+  error: string | null;
   now: number;
   windowHours: number;
   setWindowHours: (h: number) => void;
@@ -14,97 +17,85 @@ interface TimelineContextType {
 
 const TimelineContext = createContext<TimelineContextType | null>(null);
 
+// ─── provider ────────────────────────────────────────────────────────────────
+
 export function TimelineProvider({ children }: { children: React.ReactNode }) {
-  const [events, setEvents] = useState<TimelineEvent[]>([]);
-  const [now, setNow] = useState(() => Date.now());
-  const [windowHours, setWindowHours] = useState(4); // default 4 hodiny
   const { user } = useAuth();
-  const { can } = usePermission();
-console.log("TimelineProvider render", { user, events });
-  // auto-update "now"
+
+  const [events,      setEvents]      = useState<TimelineEvent[]>([]);
+  const [loading,     setLoading]     = useState(false);
+  const [error,       setError]       = useState<string | null>(null);
+  const [now,         setNow]         = useState(() => Date.now());
+  const [windowHours, setWindowHours] = useState(4);
+
+  // Keep "now" up-to-date every 30 s
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 30_000);
     return () => clearInterval(id);
   }, []);
 
-  // TESTOVACÍ DATA – odstraníme, až bude backend
-useEffect(() => {
-  const nowTs = Date.now();
+  // Debounce load so rapid windowHours changes don't spam the API
+  const loadTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  setEvents([
-    {
-      id: "test1",
-      type: "task",
-      title: "Test event -5 min",
-      start: nowTs - 5 * 60 * 1000,
-      end: nowTs + 10 * 60 * 1000,
-      color: "#4caf50",
-      icon: "TaskIcon",
-      source: { module: "tasks", entityId: "1" },
-    },
-    {
-      id: "test2",
-      type: "plan",
-      title: "Test event +20 min",
-      start: nowTs + 20 * 60 * 1000,
-      end: nowTs + 40 * 60 * 1000,
-      color: "#1976d2",
-      icon: "PlanIcon",
-      source: { module: "plans", entityId: "2" },
-    },
-    {
-      id: "test3",
-      type: "meeting",
-      title: "Test event +1 hod",
-      start: nowTs + 60 * 60 * 1000,
-      color: "#ff9800",
-      icon: "MeetingIcon",
-      source: { module: "meetings", entityId: "3" },
-    },
-  ]);
-}, []);
+  const load = useCallback(async () => {
+    if (!user) return; // not authenticated yet
 
-
-  async function load() {
     const from = now - (windowHours / 2) * 60 * 60 * 1000;
-    const to = now + (windowHours / 2) * 60 * 60 * 1000;
+    const to   = now + (windowHours / 2) * 60 * 60 * 1000;
+
+    setLoading(true);
+    setError(null);
 
     try {
-      const res = await api.get("/timeline", {
-        params: { from, to },
-      });
-      setEvents(res.data as TimelineEvent[]);
-    } catch (e) {
-      console.warn("Failed to load timeline events", e);
-      setEvents([]);
-    }
-  }
+      const res = await api.get("/timeline", { params: { from, to } });
+      const raw: any[] = Array.isArray(res.data) ? res.data : [];
 
-  // reload při změně okna nebo času
-  // useEffect(() => {
-  //   load();
-  //   // eslint-disable-next-line react-hooks/exhaustive-deps
-  // }, [windowHours]);
+      // Map backend DTO → frontend TimelineEvent
+      const mapped: TimelineEvent[] = raw.map((item) => ({
+        id:    item.id,
+        type:  item.type  ?? "event",
+        title: item.title ?? item.name ?? "Event",
+        start: item.start,
+        end:   item.end   ?? item.start + 60 * 60 * 1000,
+        color: item.color ?? "#1976d2",
+        source: item.source ?? { module: "events", entityId: item.id },
+        // pass through any extra meta for consumers
+        ...(item.meta ? { meta: item.meta } : {}),
+      }));
+
+      setEvents(mapped);
+    } catch (err: any) {
+      const msg = err?.response?.data?.error ?? err?.message ?? "Failed to load timeline";
+      console.warn("[TimelineContext] load error:", msg);
+      setError(msg);
+      setEvents([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [user, now, windowHours]);
+
+  // Re-fetch whenever the window changes (debounced 300 ms)
+  useEffect(() => {
+    if (loadTimerRef.current) clearTimeout(loadTimerRef.current);
+    loadTimerRef.current = setTimeout(load, 300);
+    return () => {
+      if (loadTimerRef.current) clearTimeout(loadTimerRef.current);
+    };
+  }, [load]);
 
   const value = useMemo(
-    () => ({
-      events,
-      now,
-      windowHours,
-      setWindowHours,
-      reload: load,
-    }),
-    [events, now, windowHours]
+    () => ({ events, loading, error, now, windowHours, setWindowHours, reload: load }),
+    [events, loading, error, now, windowHours, load]
   );
-  // if (!user || !can("timeline.view")) {
-  //   return <>{children}</>;
-  // }
+
   return (
     <TimelineContext.Provider value={value}>
       {children}
     </TimelineContext.Provider>
   );
 }
+
+// ─── hook ────────────────────────────────────────────────────────────────────
 
 export function useTimeline() {
   const ctx = useContext(TimelineContext);

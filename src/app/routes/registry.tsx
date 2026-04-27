@@ -62,6 +62,9 @@ export const pages = {
     breadcrumbKey: "management.breadcrumb",
     modulePath: "/management",
   },
+  
+
+
 
 
 };

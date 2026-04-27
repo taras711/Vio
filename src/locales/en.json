@@ -26,5 +26,29 @@
   "machines": {
     "title": "Machines",
     "breadcrumb": "Machines"
+  },
+  "userDetail": {
+    "title": "User detail",
+    "breadcrumb": "User detail"
+  },
+  "userAdminTools": {
+    "title": "User admin tools",
+    "breadcrumb": "User admin tools"
+  },
+  "management": {
+    "title": "Management",
+    "breadcrumb": "Management"
+  },
+  "add": {
+    "title": "Add",
+    "breadcrumb": "Add"
+  },
+  "add.event": {
+    "breadcrumb": "Create new event",
+    "title": "Create new event"
+  },
+  "add.audit": {
+    "breadcrumb": "Create new audit",
+    "title": "Create new audit"
   }
 }

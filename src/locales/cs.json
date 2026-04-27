@@ -38,6 +38,32 @@
   "management": {
     "breadcrumb": "Management",
     "title": "Management"
+  },
+  "newtask": {
+    "breadcrumb": "Vytvorit nový úkol",
+    "title": "Vytvorit nový úkol"
+  },
+  "newproblem": {
+    "breadcrumb": "Vytvorit nový problem",
+    "title": "Vytvorit nový problem"
+  },
+  "newplan": {
+    "breadcrumb": "Vytvorit nový plan",
+    "title": "Vytvorit nový plan"
+  },
+  "newmaintenance": {
+    "breadcrumb": "Vytvorit plan údrzby",
+    "title": "Vytvorit plan údrzby"
+  },
+  "newevent": {
+    "breadcrumb": "Vytvorit novou akci",
+    "title": "Vytvorit novou akci"
+  },
+  "newaudit": {
+    "breadcrumb": "Vytvorit nový audit",
+    "title": "Vytvorit nový audit"
+  },
+  "addCreate": {
+    "title": "Vytvorit nový {type}"
   }
-
 }

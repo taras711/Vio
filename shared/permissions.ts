@@ -60,6 +60,36 @@ export const PERMISSIONS = {
   PLUGINS_MANAGE:      "plugins.manage",
   PLUGINS_DELETE:      "plugins.delete",
 
+  // events
+  EVENTS_VIEW:         "events.view",
+  EVENTS_CREATE:       "events.create",
+  EVENTS_MANAGE:       "events.manage",
+  EVENTS_DELETE:       "events.delete",
+
+  //plans
+  PLANS_VIEW:          "plans.view",
+  PLANS_CREATE:        "plans.create",
+  PLANS_MANAGE:        "plans.manage",
+  PLANS_DELETE:        "plans.delete",
+
+  // Problems
+  PROBLEMS_VIEW:       "problems.view",
+  PROBLEMS_CREATE:     "problems.create",
+  PROBLEMS_MANAGE:     "problems.manage",
+  PROBLEMS_DELETE:     "problems.delete",
+
+  // Maintenance
+  MAINTENANCE_VIEW:    "maintenance.view",
+  MAINTENANCE_CREATE:  "maintenance.create",
+  MAINTENANCE_MANAGE:  "maintenance.manage",
+  MAINTENANCE_DELETE:  "maintenance.delete",
+
+  // Audit
+  AUDIT_VIEW:          "audit.view",
+  AUDIT_CREATE:        "audit.create",
+  AUDIT_MANAGE:        "audit.manage",
+  AUDIT_DELETE:        "audit.delete",
+
   // Sectors
   SECTORS_VIEW:        "sectors.view",
   SECTORS_CREATE:      "sectors.create",
@@ -109,7 +139,6 @@ export const PERMISSIONS = {
   CONFIG_READ:         "config.read",
   CONFIG_MANAGE:       "config.manage",
   SYSTEM_BACKUP:       "system.backup",
-  AUDIT_VIEW:          "audit.view",
 
   // Wildcard (superadmin)
   WILDCARD:            "*",

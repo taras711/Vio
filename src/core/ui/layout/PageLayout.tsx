@@ -14,27 +14,49 @@ import { SectionErrorBoundary } from "@app/SectionErrorBoundary";
 
 function buildBreadcrumbs(meta: any, params: any, t: (key: string) => string) {
   const items = [];
-  // Dashboard
+
+  // Always dashboard
   items.push({
     label: t("dashboard.breadcrumb"),
     to: "/",
   });
 
-  if (meta.path.startsWith("/users")) {
+  // USERS
+  if (meta?.path?.startsWith("/users")) {
     items.push({
       label: t("users.breadcrumb"),
       to: "/users",
     });
   }
 
-  if (meta.path === "/users/:id") {
+  // ADD (create new)
+if (location.pathname.startsWith("/new")) {
+  items.push({
+    label: t("new.breadcrumb"),
+    to: "/new",   // ✔ správně
+  });
+
+  if (params.type) {
+    items.push({
+      label: t(`new${params.type}.breadcrumb`),
+      to: `/new/${params.type}`,
+    });
+  }
+
+  return items;
+}
+
+
+  // USER DETAIL
+  if (meta?.path === "/users/:id") {
     items.push({
       label: t("userDetail.breadcrumb"),
       to: `/users/${params.id}`,
     });
   }
 
-  if (meta.path === "/users/:id/admin") {
+  // USER ADMIN
+  if (meta?.path === "/users/:id/admin") {
     items.push({
       label: t("userAdminTools.breadcrumb"),
       to: `/users/${params.id}/admin`,
@@ -44,13 +66,16 @@ function buildBreadcrumbs(meta: any, params: any, t: (key: string) => string) {
   return items;
 }
 
+
+
 export function PageLayout() {
   const { t } = useTranslation();
 
   const { sidebarOpen, setSidebarOpen } = useUI();
   const matches = useMatches() as Array<{ handle?: RouteHandle; params?: any }>;
-  const meta = matches.map(m => m.handle?.meta).filter(Boolean).at(-1);
-  const params = matches.at(-1)?.params ?? {};
+const current = matches.at(-1);
+const meta = current?.handle?.meta ?? null;
+const params = current?.params ?? {};
 
   const isMobile = useMediaQuery("(max-width: 600px), (max-height: 600px)");
 

@@ -47,8 +47,15 @@ export const TABLES = {
     role_profile_conditions: "role_profile_conditions",
     user_profiles: "user_profiles",
     projects: "projects",
+    notes: "notes",
+    audit_instances: "audit_instances",
+    events: "events",
+    event_attendees: "event_attendees",
+    event_feedback: "event_feedback",
+    audit_results: "audit_results",
     suggestions: "suggestions",
     actions: "actions",
+    //celkem tabulek: 
 
 } as const;
 

@@ -76,11 +76,6 @@ const filtered = safeData
 
 return (
     <div className="p-6">
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-xl font-bold">Users</h1>
-
-        
-      </div>
 
       {/* 🔥 ActionPanel ovládá filtraci */}
       <ActionPanel

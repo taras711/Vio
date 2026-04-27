@@ -8,7 +8,8 @@ import { IdentificatedPeriod } from "@src/core/ui/hooks/IdentifyPeriod";
 export function TopBar() {
     const { toggleSidebar, openRightPanel } = useUI();
     const { user } = useAuth()!;
-    const isMobile = useMediaQuery("(max-width: 600px), (max-height: 600px)");
+    const isMobile = useMediaQuery("(max-width: 600px)");
+    const isMobileLandscape = useMediaQuery("(max-width: 600px) and (orientation: landscape)");
   return (
     <Box
         className="topbar"
@@ -18,7 +19,7 @@ export function TopBar() {
           <Menu size={22} />
         </IconButton>
 
-        <Typography variant="subtitle1" fontWeight={600} style={{color: "#797979",textOverflow: "ellipsis",overflow: "hidden", maxWidth: 400, fontSize: isMobile ? "1rem" : "1.25rem", whiteSpace: "nowrap" }}>
+        <Typography variant="subtitle1" fontWeight={600} style={{color: "#797979",textOverflow: "ellipsis",overflow: "hidden", maxWidth: isMobileLandscape ? "350px" : isMobile ? "130px" : "400px", fontSize: isMobile ? "0.75rem" : "1.25rem", whiteSpace: "nowrap" }}>
           {IdentificatedPeriod({time: new Date().getHours()}).period}, {user?.name ?? "User"}!
         </Typography>
       </Box>

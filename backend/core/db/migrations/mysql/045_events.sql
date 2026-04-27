@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS events (
     endTime BIGINT NOT NULL,
     color VARCHAR(255) NOT NULL,
     type VARCHAR(255) NOT NULL,
-    description TEXT NULL DEFAULT ' ',
+    description TEXT NULL,
     createdAt BIGINT NOT NULL,
     updatedAt BIGINT NOT NULL,
     PRIMARY KEY (id),

@@ -28,6 +28,7 @@ import { createAuthRouter } from "./api/routes/auth";
 import { createUserRoutes } from "./modules/users/userRoutes";
 import { UserService } from "./modules/users/UserService";
 import { UserController } from "./modules/users/UserController";
+import { createTimelineModule } from "./modules/timeline";
 
 function loadServerConfig() {
   const configPath = path.resolve(__dirname, "./config/server.json");
@@ -170,6 +171,16 @@ app.use((req, res, next) => {
 app.use("/api/auth", (req, res, next) => {
   if (!setup.isConfigured()) return next();
   return createAuthController(db, config, licenseService)(req, res, next);
+});
+
+app.use("/api/timeline", (req, res, next) => {
+  if (!setup.isConfigured()) return next();
+  const timelineModule = createTimelineModule({
+    db,
+    auth,
+    license: licenseService,
+  });
+  return timelineModule.routes(req, res, next);
 });
 
 

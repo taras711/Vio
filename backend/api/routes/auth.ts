@@ -34,7 +34,7 @@ export function createAuthRouter(auth: AuthService) {
         httpOnly: true,
         secure: false,       // in production true
         sameSite: "lax",
-        path: "/api/auth/refresh"
+        path: "/"
       });
 
       // access token → httpOnly cookie
@@ -79,7 +79,7 @@ export function createAuthRouter(auth: AuthService) {
         httpOnly: true,
         secure: false,       // in production true
         sameSite: "lax",
-        path: "/api/auth/refresh"
+        path: "/"
       });
 
       // Update access token cookie
@@ -97,30 +97,29 @@ export function createAuthRouter(auth: AuthService) {
     }
   });
 
-  router.post("/logout", globalRateLimit, async (req, res) => {
+router.post("/logout", globalRateLimit, async (req, res) => {
   const refreshToken = req.cookies.refreshToken;
 
   if (refreshToken) {
     await auth.revokeRefreshToken(refreshToken);
   }
 
-  res.cookie("refreshToken", "", {
+  const opts = {
     httpOnly: true,
-    secure: false,       // in production true
-    sameSite: "lax",
-    path: "/api/auth/refresh"
-  });
+    secure: false,
+    sameSite: "lax" as const
+  };
 
-  // Update access token cookie
-  res.cookie("accessToken", "", {
-    httpOnly: true,
-    secure: false,       // in production true
-    sameSite: "lax",
-    path: "/"
-  });
+  // Smazat všechny možné path, které kdy existovaly
+  res.clearCookie("refreshToken", { ...opts, path: "/" });
+  res.clearCookie("refreshToken", { ...opts, path: "/api/auth" });
+  res.clearCookie("refreshToken", { ...opts, path: "/api/auth/refresh" });
+
+  res.clearCookie("accessToken", { ...opts, path: "/" });
 
   return res.json({ ok: true });
-  });
+});
+
 
   return router;
 }
