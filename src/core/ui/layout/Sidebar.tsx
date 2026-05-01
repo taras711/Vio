@@ -2,7 +2,7 @@
 import { Box, Tooltip, Typography, useMediaQuery } from "@mui/material";
 import { NAV_ITEMS } from "./Navigation";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Settings, LogOut, Terminal } from "lucide-react";
+import { Settings, LogOut, Terminal, X } from "lucide-react";
 import { useLicenseInfo } from "../../../auth/License";
 import trialLogo from "@assets/logo_trial.png";
 import standardLogo from "@assets/logo_standard.png";
@@ -55,6 +55,13 @@ export function SideBar({ open }: { open: boolean }) {
               <Typography variant="caption" sx={{ ml: 3, fontWeight: 600, color: "#818080" }}>
                 {roles[userRole as keyof typeof roles] || roles.user}
               </Typography>
+            </Box>
+          )}
+          {isMobile && (
+            <Box className="sidebar-close"
+            sx={{ position: "absolute", top: 10, right: 10, cursor: "pointer" }}
+            onClick={() => setSidebarOpen(false)}>
+              <X />
             </Box>
           )}
         </Box>

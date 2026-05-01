@@ -1,17 +1,17 @@
 import { PERMISSIONS } from "../../../../../../shared/permissions";
-import { EventForm } from "@ui/pages/forms/add/EventForm";
-import { TaskForm } from "@ui/pages/forms/add/TaskForm";
-import { ProblemForm } from "@ui/pages/forms/add/ProblemForm";
-import { PlanForm } from "@ui/pages/forms/add/PlanForm";
-import { MaintenanceForm } from "@ui/pages/forms/add/MaintenanceForm";
-import { AuditForm } from "@ui/pages/forms/add/AuditForm";
+import { EventForm } from "@src/core/ui/pages/forms/add/EventForm";
+import { TaskForm } from "@src/core/ui/pages/forms/add/TaskForm";
+import { ProblemForm } from "@src/core/ui/pages/forms/add/ProblemForm";
+import { PlanForm } from "@src/core/ui/pages/forms/add/PlanForm";
+import { MaintenanceForm } from "@src/core/ui/pages/forms/add/MaintenanceForm";
+import { AuditForm } from "@src/core/ui/pages/forms/add/AuditForm";
 import { CalendarPlus,
     ClipboardList,
     AlertTriangle,
     BarChart3,
     Users,
-    BriefcaseBusiness,
-    Calendar } from "lucide-react";
+    BriefcaseBusiness
+  } from "lucide-react";
 
 export const addRegistry = {
   event: {

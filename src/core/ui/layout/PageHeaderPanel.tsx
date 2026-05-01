@@ -31,9 +31,10 @@ export function PageHeaderPanel({
         ))}
       </Breadcrumbs>
 
-      <Typography variant="h4" fontWeight={600}>
+      {title && <Typography variant="h4" fontWeight={600}>
         {title}
       </Typography>
+      }
     </Box>
   );
 }

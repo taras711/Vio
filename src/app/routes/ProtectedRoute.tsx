@@ -22,9 +22,6 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
       navigate("/login", { replace: true });
     }
   }, [loading, user, path, navigate]);
-console.log("MATCHES:", matches);
-console.log("META:", meta);
-console.log("USER:", user);
 
   // 2) Setup wizard je vždy povolený
   if (path.startsWith("/setup")) {
@@ -51,7 +48,6 @@ console.log("USER:", user);
       return <div style={{ padding: 20 }}>Access denied</div>;
     }
   }
-
 
   // 6) Renderuj stránku
   return children ? children : <Outlet />;

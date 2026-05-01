@@ -55,7 +55,6 @@ children: [
   handle: {
     meta: {
       path: "/new/:type",
-      titleKey: "addCreate.title",
       breadcrumbKey: "addCreate.breadcrumb",
     }
   }

@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { RouterProvider } from "react-router-dom";
 import { router } from "./routes/router";
 import { UIProvider } from "@layout/ui-store";
-import { useActionFeedback } from "@hooks/ActionFeedback";
 import { NotificationPage } from "@pages/notification/NotificationPage";
 import NoConnection from "@assets/no-connection.png";
 
@@ -29,7 +28,7 @@ useEffect(() => {
     try {
       const res = await fetch("/api/status").finally(() => {
         setTimeout(() => setReconnecting(false), 3000);
-      });;
+      });
       const json = await res.json();
 
       if (cancelled) return;
@@ -43,17 +42,21 @@ useEffect(() => {
     }
   }
 
-  // 🔥 1) Okamžitý první request
   checkStatus();
 
-  // 🔥 2) Interval pro další requesty
-  const interval = setInterval(checkStatus, 10000);
+  // 🔥 interval jen pokud setup není hotový
+  if (setup === false || setup === null) {
+    const interval = setInterval(checkStatus, 10000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }
 
   return () => {
     cancelled = true;
-    clearInterval(interval);
   };
-}, []);
+}, [setup]);
 
  
   if (failed) {

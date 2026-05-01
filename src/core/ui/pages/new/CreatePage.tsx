@@ -21,7 +21,7 @@ export function Component() {
 
   return (
     <Box sx={{ p: 3 }}>
-      <Typography variant="h5" sx={{ mb: 2, fontWeight: 600 }}>
+      <Typography variant="h4" sx={{ mb: 2, fontWeight: 600 }}>
         {config.title}
       </Typography>
 

@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS events (
     startTime BIGINT NOT NULL,
     endTime BIGINT NOT NULL,
     color VARCHAR(255) NOT NULL,
-    type VARCHAR(255) NOT NULL,
+    type ENUM('event', "meeting", 'training', 'inspection', 'appointment') NOT NULL DEFAULT 'meeting',
     description TEXT NULL,
     createdAt BIGINT NOT NULL,
     updatedAt BIGINT NOT NULL,
