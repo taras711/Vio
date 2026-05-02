@@ -1,5 +1,5 @@
 import { useForm, Controller } from "react-hook-form";
-import { Users } from "lucide-react";
+import { Users, Settings, X} from "lucide-react";
 import {
   Box,
   TextField,
@@ -12,6 +12,15 @@ import {
   Tooltip,
   Avatar,
   Paper,
+  Switch,
+  FormControlLabel,
+  Checkbox,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow
 } from "@mui/material";
 
 import { useAuth } from "@src/auth/AuthContext";
@@ -19,12 +28,13 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { UsersService } from "@src/services/users";
 import { usePageLoader } from "@ui/hooks/UsePageLoader";
 import dayjs, { Dayjs } from "dayjs";
-
+import { Drawer } from "@mui/material";
 import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { ColorPickerField } from "@ui/primitives/ColorPickerField";
+import useMediaQuery from "@mui/material/useMediaQuery";
 
 export interface User {
   id: string;
@@ -58,6 +68,18 @@ export interface EventFormValues {
   color: string;
   type: string;
   description?: string;
+  feedbackEnabled: boolean;
+  notifyOrganizerOnFeedback: boolean;
+  notifyAttendeesOnUpdate: boolean;
+  notifyAttendeesBeforeStart: boolean;
+  deliveryOrganizerFeedbackApp: boolean;
+  deliveryOrganizerFeedbackEmail: boolean;
+
+  deliveryAttendeesUpdateApp: boolean;
+  deliveryAttendeesUpdateEmail: boolean;
+
+  deliveryAttendeesBeforeStartApp: boolean;
+  deliveryAttendeesBeforeStartEmail: boolean;
 }
 
 interface UserPickerProps {
@@ -68,6 +90,37 @@ interface UserPickerProps {
   onChange: (id: string) => void;
   users: User[];
   excludedIds?: string[];
+
+}
+
+export interface EventData {
+  id: string;
+  name: string;
+  locationId: string;
+  startTime: number;
+  endTime: number;
+  color: string;
+  type: string;
+  description?: string;
+
+  feedbackEnabled: boolean; // ← TADY
+}
+
+interface EventSettingsPanelProps {
+  feedbackEnabled: boolean;
+  notifyOrganizerOnFeedback: boolean;
+  notifyAttendeesOnUpdate: boolean;
+  notifyAttendeesBeforeStart: boolean;
+  deliveryOrganizerFeedbackApp: boolean;
+  deliveryOrganizerFeedbackEmail: boolean;
+
+  deliveryAttendeesUpdateApp: boolean;
+  deliveryAttendeesUpdateEmail: boolean;
+
+  deliveryAttendeesBeforeStartApp: boolean;
+  deliveryAttendeesBeforeStartEmail: boolean;
+  onChange: (field: keyof EventFormValues, value: boolean) => void;
+  onClose: () => void;
 }
 
 function sanitizeAttendeesInState(
@@ -118,8 +171,13 @@ export function EventForm({ endpoint }: EventFormProps) {
   const { user } = useAuth()!;
   const [organizerId, setOrganizerId] = useState<string | null>(null);
   const [attendees, setAttendees] = useState<AttendeeInput[]>([]);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [eventData, setEventData] = useState<EventData | null>(null);
 
-  const { control, handleSubmit, register } = useForm<EventFormValues>({
+  const isMobile = useMediaQuery("(max-width: 600px)");
+
+
+  const { control, handleSubmit, register, watch, setValue } = useForm<EventFormValues>({
     defaultValues: {
       name: "",
       locationId: "",
@@ -128,6 +186,18 @@ export function EventForm({ endpoint }: EventFormProps) {
       color: "#2196f3",
       type: "meeting",
       description: "",
+      feedbackEnabled: true,
+      notifyOrganizerOnFeedback: true,
+      notifyAttendeesOnUpdate: true,
+      notifyAttendeesBeforeStart: false,
+      deliveryOrganizerFeedbackApp: true,
+      deliveryOrganizerFeedbackEmail: false,
+
+      deliveryAttendeesUpdateApp: true,
+      deliveryAttendeesUpdateEmail: false,
+
+      deliveryAttendeesBeforeStartApp: true,
+      deliveryAttendeesBeforeStartEmail: false,
     },
   });
 
@@ -285,10 +355,50 @@ const onSubmit = async (data: EventFormValues) => {
         <Grid item xs={12}>
           <TextField
             label="Location ID"
+            placeholder="Enter Location ID or number/name of the location"
             fullWidth
             {...register("locationId", { required: true })}
           />
         </Grid>
+      </Grid>
+      <Grid container spacing={2} sx={{ mt: 2 }}>
+        <Grid item xs={6}>
+          <FormControlLabel
+            control={
+              <IconButton onClick={() => setSettingsOpen(true)}>
+                <Settings size={20} />
+              </IconButton>
+          }
+            label="Advanced Settings"
+          />
+        </Grid>
+      </Grid>
+      <Grid container spacing={2} sx={{ mt: 2 }}>
+          <Drawer
+              variant="temporary"
+              anchor="right"
+              open={settingsOpen}
+              onClose={() => setSettingsOpen(false)}
+              PaperProps={{ sx: { width: isMobile ? "90%" : 370, p: 3, backgroundColor: "#dfecf1" } }}
+            >
+              <EventSettingsPanel
+                feedbackEnabled={watch("feedbackEnabled")}
+                notifyOrganizerOnFeedback={watch("notifyOrganizerOnFeedback")}
+                notifyAttendeesOnUpdate={watch("notifyAttendeesOnUpdate")}
+                notifyAttendeesBeforeStart={watch("notifyAttendeesBeforeStart")}
+                deliveryOrganizerFeedbackApp={watch("deliveryOrganizerFeedbackApp")}
+                deliveryOrganizerFeedbackEmail={watch("deliveryOrganizerFeedbackEmail")}
+                deliveryAttendeesUpdateApp={watch("deliveryAttendeesUpdateApp")}
+                deliveryAttendeesUpdateEmail={watch("deliveryAttendeesUpdateEmail")}
+                deliveryAttendeesBeforeStartApp={watch("deliveryAttendeesBeforeStartApp")}
+                deliveryAttendeesBeforeStartEmail={watch("deliveryAttendeesBeforeStartEmail")}
+                onChange={(field, value) =>
+                  setValue(field as keyof EventFormValues, value)
+                }
+                onClose={() => setSettingsOpen(false)}
+              />
+            </Drawer>
+
       </Grid>
 
       <Typography variant="h6" sx={{ mt: 4, mb: 2 }}>
@@ -614,5 +724,185 @@ const formatUserName = (u: User) => {
     </Box>
   );
 }
+
+function EventSettingsPanel({
+  feedbackEnabled,
+  notifyOrganizerOnFeedback,
+  notifyAttendeesOnUpdate,
+  notifyAttendeesBeforeStart,
+  deliveryOrganizerFeedbackApp,
+  deliveryOrganizerFeedbackEmail,
+  deliveryAttendeesUpdateApp,
+  deliveryAttendeesUpdateEmail,
+  deliveryAttendeesBeforeStartEmail,
+  deliveryAttendeesBeforeStartApp,
+  onChange,
+  onClose
+}: EventSettingsPanelProps) {
+
+  return (
+    <Box>
+      {/* Header */}
+      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
+        <Typography variant="h6">Event Settings</Typography>
+        <IconButton onClick={onClose}>
+          <X size={20} />
+        </IconButton>
+      </Box>
+
+      {/* Reactions */}
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="subtitle1" sx={{ mb: 1 }}>
+          Reactions
+        </Typography>
+
+        <FormControlLabel
+          control={
+            <Switch
+              checked={feedbackEnabled}
+              onChange={(e) => onChange("feedbackEnabled", e.target.checked)}
+            />
+          }
+          label="Allow reactions to this event"
+        />
+
+        <Typography variant="body2" sx={{ opacity: 0.6, mt: 0.5 }}>
+          When enabled, attendees and organizer can post reactions and comments.
+        </Typography>
+      </Box>
+
+      {/* Notifications */}
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="subtitle1" sx={{ mb: 1 }}>
+          Notifications
+        </Typography>
+
+        <FormControlLabel
+          control={
+            <Switch
+              checked={notifyOrganizerOnFeedback}
+              onChange={(e) =>
+                onChange("notifyOrganizerOnFeedback", e.target.checked)
+              }
+            />
+          }
+          label="Notify organizer about new reactions"
+        />
+
+        <FormControlLabel
+          control={
+            <Switch
+              checked={notifyAttendeesOnUpdate}
+              onChange={(e) =>
+                onChange("notifyAttendeesOnUpdate", e.target.checked)
+              }
+            />
+          }
+          label="Notify attendees about event updates"
+        />
+
+        <FormControlLabel
+          control={
+            <Switch
+              checked={notifyAttendeesBeforeStart}
+              onChange={(e) =>
+                onChange("notifyAttendeesBeforeStart", e.target.checked)
+              }
+            />
+          }
+          label="Notify attendees before event starts"
+        />
+      </Box>
+      {/* Delivery Methods */}
+<Box sx={{ mb: 4 }}>
+  <Typography variant="subtitle1" sx={{ mb: 1 }}>
+    Notification Delivery
+  </Typography>
+
+  <Table size="small">
+    <TableHead>
+      <TableRow>
+        <TableCell>Notification Trigger</TableCell>
+        <TableCell align="center">App</TableCell>
+        <TableCell align="center">Email</TableCell>
+      </TableRow>
+    </TableHead>
+
+    <TableBody>
+
+      <TableRow>
+        <TableCell>Organizer: New reactions</TableCell>
+        <TableCell align="center">
+          <Checkbox
+            checked={deliveryOrganizerFeedbackApp}
+            onChange={(e) =>
+              onChange("deliveryOrganizerFeedbackApp", e.target.checked)
+            }
+          />
+        </TableCell>
+        <TableCell align="center">
+          <Checkbox
+            checked={deliveryOrganizerFeedbackEmail}
+            onChange={(e) =>
+              onChange("deliveryOrganizerFeedbackEmail", e.target.checked)
+            }
+          />
+        </TableCell>
+      </TableRow>
+
+      <TableRow>
+        <TableCell>Attendees: Event updates</TableCell>
+        <TableCell align="center">
+          <Checkbox
+            checked={deliveryAttendeesUpdateApp}
+            onChange={(e) =>
+              onChange("deliveryAttendeesUpdateApp", e.target.checked)
+            }
+          />
+        </TableCell>
+        <TableCell align="center">
+          <Checkbox
+            checked={deliveryAttendeesUpdateEmail}
+            onChange={(e) =>
+              onChange("deliveryAttendeesUpdateEmail", e.target.checked)
+            }
+          />
+        </TableCell>
+      </TableRow>
+
+      <TableRow>
+        <TableCell>Attendees: Before event starts</TableCell>
+        <TableCell align="center">
+          <Checkbox
+            checked={deliveryAttendeesBeforeStartApp}
+            onChange={(e) =>
+              onChange("deliveryAttendeesBeforeStartApp", e.target.checked)
+            }
+          />
+        </TableCell>
+        <TableCell align="center">
+          <Checkbox
+            checked={deliveryAttendeesBeforeStartEmail}
+            onChange={(e) =>
+              onChange("deliveryAttendeesBeforeStartEmail", e.target.checked)
+            }
+          />
+        </TableCell>
+      </TableRow>
+
+    </TableBody>
+  </Table>
+
+  <Typography variant="body2" sx={{ opacity: 0.6, mt: 1 }}>
+    Choose how each notification type should be delivered.
+  </Typography>
+</Box>
+
+
+    </Box>
+  );
+}
+
+
 
 

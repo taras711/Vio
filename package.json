@@ -9,7 +9,7 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "server": "ts-node -P ./backend/tsconfig.json backend/server.ts"
+    "serv": "ts-node -P ./backend/tsconfig.json backend/server.ts"
   },
   "dependencies": {
     "@date-io/dayjs": "^3.2.0",
