@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS event_feedback (
         'all_attendees'
     ) NOT NULL DEFAULT 'organizer_only',
 
-    visibleTo JSON NULL, -- pole userId, pokud visibility = selected_attendees
+    visibleTo TEXT NULL, -- pole userId, pokud visibility = selected_attendees
 
     message TEXT NOT NULL,
 

@@ -55,6 +55,7 @@ export const TABLES = {
     audit_results: "audit_results",
     suggestions: "suggestions",
     actions: "actions",
+    locations: "locations",
     //celkem tabulek: 
 
 } as const;

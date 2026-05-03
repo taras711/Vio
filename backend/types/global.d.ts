@@ -9,6 +9,8 @@ declare namespace Express {
       userId: string;
       role: string;
       permissions: string[];
+      areaId?: string;
+      sectorId?: string;
     };
   }
 }

@@ -53,7 +53,9 @@ export function createAuthController(
         email: user.email,
         role: user.role,
         permissions: auth.permissions,
-        isActive: user.isActive
+        isActive: user.isActive,
+        areaId: user.areaId,
+        sectorId: user.sectorId
       });
     }
   );

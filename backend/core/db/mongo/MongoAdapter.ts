@@ -46,6 +46,17 @@ export class MongoAdapter implements DatabaseAdapter {
     return row as unknown as T | null;
     }
 
+    async safeRaw(command: any) {
+      const result = await this.raw(command);
+
+      if (result && Array.isArray(result.documents)) {
+        return result.documents;
+      }
+
+      return [];
+    }
+
+
     async find<T>(collection: string, query: any): Promise<T[]> {
       if (!ALLOWED_TABLES.has(collection as TableName)) {
         throw new Error(`Table "${collection}" is not allowed.`);

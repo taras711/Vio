@@ -33,7 +33,9 @@ req.auth = {
   role: toRole(user.role),
   permissions: user.permissions || [],
   type: ctx.type,
-  sub: ctx.sub
+  sub: ctx.sub,
+   areaId: user.areaId,
+  sectorId: user.sectorId
 } as AuthContext;
 
 

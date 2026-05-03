@@ -22,6 +22,8 @@ export interface User {
   phoneNumber?: string;
   position?: string;
   department?: string;
+  sectorId?: string;
+  areaId?: string;
   section?: string;
   workGroup?: string;
   location?: string;

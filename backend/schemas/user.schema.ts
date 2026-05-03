@@ -10,7 +10,9 @@ export const CreateUserSchema = z.object({
   name: z.string().min(2),
   password: z.string().min(8),
   role: z.enum(["admin", "user", "superadmin"]),
-  permissions: z.array(z.string())
+  permissions: z.array(z.string()),
+  areaId: z.string().optional().nullable(),
+  sectorId: z.string().optional().nullable(),
 });
 
 export const UpdateUserSchema = z.object({
@@ -20,4 +22,6 @@ export const UpdateUserSchema = z.object({
   role: z.enum(["admin", "user", "superadmin"]).optional(),
   permissions: z.array(z.string()).optional(),
   isActive: z.boolean().optional(),
+  areaId: z.string().optional().nullable(),
+  sectorId: z.string().optional().nullable(),
 });

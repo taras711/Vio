@@ -15,5 +15,6 @@ export interface DatabaseAdapter {
   raw(sql: string, params?: any[]): Promise<any>;
   findById<T>(table: string, id: string): Promise<T | null>;
   findByEmail<T>(table: string, email: string): Promise<T | null>;
+  safeRaw<T>(sql: string, params?: any[]): Promise<T>;
 }
 

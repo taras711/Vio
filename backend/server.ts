@@ -30,6 +30,22 @@ import { UserService } from "./modules/users/UserService";
 import { UserController } from "./modules/users/UserController";
 import { createTimelineModule } from "./modules/timeline";
 
+import { AreaService } from "./modules/areas/AreaService";
+import { AreaController } from "./modules/areas/AreaController";
+import { createAreaRoutes } from "./api/routes/areas";
+
+import { LocationService } from "./modules/locations/LocationService";
+import { LocationController } from "./modules/locations/LocationController";
+import { createLocationRoutes } from "./api/routes/locations";
+
+import { SectorService } from "./modules/sectors/SectorService";
+import { SectorController } from "./modules/sectors/SectorController";
+import { createSectorRoutes } from "./api/routes/sectors";
+
+import { UserQueryService } from "./modules/users/UserQueryService";
+import { UserQueryController } from "./modules/users/UserQueryController";
+import { createUserQueryRoutes } from "./api/routes/users";
+
 function loadServerConfig() {
   const configPath = path.resolve(__dirname, "./config/server.json");
   if (!fs.existsSync(configPath)) return null;
@@ -203,6 +219,35 @@ app.use("/api/timeline", (req, res, next) => {
         { name: "machines", factory: createMachinesModule }
     ];
 
+    // USER QUERIES
+    app.use("/api/users/query", (req, res, next) => {
+      const queryService = new UserQueryService(db);
+      const queryController = new UserQueryController(queryService);
+      return createUserQueryRoutes(queryController)(req, res, next);
+    });
+
+    // AREAS
+    app.use("/api/areas", (req, res, next) => {
+      const areaService = new AreaService(db);
+      const areaController = new AreaController(areaService);
+      return createAreaRoutes(areaController)(req, res, next);
+    });
+
+    // SECTORS
+    app.use("/api/sectors", (req, res, next) => {
+      const service = new SectorService(db);
+      const controller = new SectorController(service);
+      return createSectorRoutes(controller)(req, res, next);
+    });
+
+    // LOCATIONS
+    app.use("/api/locations", (req, res, next) => {
+      const service = new LocationService(db);
+      const controller = new LocationController(service);
+      return createLocationRoutes(controller)(req, res, next);
+    });
+
+    // MODULES
     const loader = new ModuleLoader(licenseService);
     const modules = loader.loadModules(
         allModules.filter(m => licenseService.getLicense().allowedModules.includes(m.name)),

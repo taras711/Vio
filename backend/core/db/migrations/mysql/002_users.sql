@@ -16,6 +16,8 @@ CREATE TABLE IF NOT EXISTS users (
   phoneNumber VARCHAR(255),
   position VARCHAR(255),
   department VARCHAR(255),
+  sectorId VARCHAR(36) NOT NULL,
+  areaId VARCHAR(36) NOT NULL,
   section VARCHAR(255),
   workGroup VARCHAR(255),
   location VARCHAR(255),

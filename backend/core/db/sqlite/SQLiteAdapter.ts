@@ -111,6 +111,19 @@ findById<T>(table: string, id: string): Promise<T | null> {
   return Promise.resolve((row as unknown as T) ?? null);
 }
 
+async safeRaw<T = any>(query: string, params: any[] = []): Promise<T> {
+  const result = await this.raw(query, params);
+
+  // SELECT / PRAGMA → SQLite vrací pole
+  if (Array.isArray(result)) {
+    return result as T;
+  }
+
+  // run() → vrací objekt { changes, lastInsertRowid }
+  // ale safeRaw má vracet pole → vracíme prázdné pole
+  return [] as T;
+}
+
 findByEmail<T>(table: string, email: string): Promise<T | null> {
   const stmt = this.db.prepare(`SELECT * FROM ${table} WHERE email = ?`);
   const row = stmt.get(email);

@@ -57,6 +57,32 @@ export class FirebirdAdapter implements DatabaseAdapter {
     });
   }
 
+  async safeRaw<T = any>(sql: string, _params?: any[]): Promise<T> {
+    try {
+      // Firebird nepodporuje params → ignorujeme je
+      const result = await this.raw(sql);
+
+      // SELECT → Firebird vrací pole
+      if (Array.isArray(result)) {
+        return result as T;
+      }
+
+      // Firebird někdy vrací {} → interpretujeme jako 0 rows
+      if (result && typeof result === "object") {
+        return [] as T;
+      }
+
+      return [] as T;
+    } catch (err: any) {
+      // Firebird někdy hází "no results"
+      if (err?.message?.includes("no results")) {
+        return [] as T;
+      }
+
+      throw err;
+    }
+  }
+
     async raw(command: string): Promise<any> {
     const db = await this.connect();
     return new Promise((resolve, reject) => {

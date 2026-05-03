@@ -22,7 +22,8 @@ export interface AuthContext {
   permissions: string[];
   type: string;
   sub: string;
-
+  areaId?: string;
+  sectorId?: string;
 }
 
 export interface AuthIdentity {

@@ -70,6 +70,20 @@ async findOne<T>(table: string, query: any): Promise<T | null> {
   return rows[0] ?? null;
 }
 
+async safeRaw<T = any>(sql: string, params: any[] = []): Promise<T> {
+  try {
+    const rows = await this.raw(sql, params);
+
+    // MySQL raw() vrací pole → to je náš T
+    return rows as T;
+  } catch (err: any) {
+    if (err?.code === "not_found" || err?.message?.includes("not_found")) {
+      return [] as T;
+    }
+    throw err;
+  }
+}
+
 async insert<T extends Record<string, any>>(table: string, data: T): Promise<void> {
   if (!ALLOWED_TABLES.has(table as TableName)) {
     throw new Error(`Table "${table}" is not allowed.`);

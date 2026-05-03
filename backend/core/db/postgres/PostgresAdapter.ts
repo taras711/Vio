@@ -90,6 +90,12 @@ export class PostgresAdapter implements DatabaseAdapter {
         return result.rows[0] ?? null;
     }
 
+    async safeRaw(sql: string, params: any[] = []) {
+      const result = await this.raw(sql, params);
+      return Array.isArray(result.rows) ? result.rows : [];
+    }
+
+
 async update<T extends Record<string, any>>(
   table: string,
   query: Record<string, any>,

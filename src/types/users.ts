@@ -1,3 +1,4 @@
+// src/types/users.ts
 export interface Session {
   id: string;
   device: string;
@@ -15,7 +16,8 @@ export interface UserData {
   createdAt: string;
   updatedAt: string;
   avatarUrl?: string;
-  sector?: string;
+  areaId?: string;
+  sectorId?: string;
   position?: string;
   personalNumber?: string;
   lastLoginAt?: string;

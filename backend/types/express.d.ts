@@ -9,6 +9,13 @@ declare global {
   namespace Express {
     interface Request {
       auth?: AuthContext;
+      user?: {
+        userId: string;
+        role: string;
+        areaId?: string;
+        sectorId?: string;
+        permissions: string[];
+      };
     }
   }
 }

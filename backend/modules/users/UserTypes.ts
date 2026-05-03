@@ -11,6 +11,8 @@ export interface User {
   passwordHash: string;
   role: Role;
   permissions: string[];
+  sectorId?: string;
+  areaId?: string;
   isActive: boolean;
 }
 
