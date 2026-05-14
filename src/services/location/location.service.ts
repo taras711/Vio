@@ -16,6 +16,16 @@ export const LocationService = {
     return handle<Location[]>(res);
   },
 
+  getByAreaVisibility: async (areaId: string): Promise<Location[]> => {
+    const res = await fetch(`${BASE}/by-area-visibility/${encodeURIComponent(areaId)}`);
+    return handle<Location[]>(res);
+  },
+
+  getByAreaSectorVisibility: async (areaId: string, sectorId: string): Promise<Location[]> => {
+    const res = await fetch(`${BASE}/by-area-sector-visibility/${encodeURIComponent(areaId)}/${encodeURIComponent(sectorId)}`);
+    return handle<Location[]>(res);
+  },
+
   getByAreaSector: async (areaId: string, sectorId: string): Promise<Location[]> => {
     const res = await fetch(`${BASE}/by-area-sector/${encodeURIComponent(areaId)}/${encodeURIComponent(sectorId)}`);
     return handle<Location[]>(res);

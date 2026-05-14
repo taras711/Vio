@@ -3,6 +3,7 @@ CREATE TABLE IF NOT EXISTS event_attendees (
     eventId VARCHAR(36) NOT NULL,
 
     userId VARCHAR(36) NULL,
+    role VARCHAR(36) NULL,
     roleId VARCHAR(36) NULL,
     sectorId VARCHAR(36) NULL,
     locationId VARCHAR(36) NULL,
@@ -29,7 +30,6 @@ CREATE TABLE IF NOT EXISTS event_attendees (
     PRIMARY KEY (id),
     KEY eventId (eventId),
     KEY userId (userId),
-    KEY roleId (roleId),
     KEY sectorId (sectorId),
     KEY locationId (locationId)
 );

@@ -64,6 +64,12 @@
     "title": "Vytvorit nový audit"
   },
   "addCreate": {
-    "title": "Vytvorit nový {type}"
-  }
+    "title": "Vytvorit nový %type%"
+  },
+  "event": "Akční plan",
+  "task": "Úkol",
+  "problem": "Problem",
+  "plan": "Plan",
+  "maintenance": "Plan údrzby",
+  "audit": "Audit"
 }

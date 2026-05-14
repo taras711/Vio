@@ -15,6 +15,39 @@ export class UserQueryService {
     `, [areaId]);
   }
 
+  getByAreaVisibility(areaId: string) {
+    return this.db.raw(`
+      SELECT u.*, u.areaId, a.sectorId
+      FROM users u
+      LEFT JOIN areas a ON a.id = u.areaId
+      WHERE u.areaId = ?
+        OR u.areaId IN (
+          SELECT visibleAreaId
+          FROM area_visibility
+          WHERE areaId = ?
+        )
+    `, [areaId, areaId]);
+  }
+
+  getByAreaSectorVisibility(areaId: string, sectorId: string) {
+    return this.db.raw(`
+      SELECT u.*, u.areaId, a.sectorId
+      FROM users u
+      LEFT JOIN areas a ON a.id = u.areaId
+      WHERE 
+        (
+          u.areaId = ?
+          OR u.areaId IN (
+            SELECT visibleAreaId
+            FROM area_visibility
+            WHERE areaId = ?
+          )
+        )
+        AND a.sectorId = ?
+    `, [areaId, areaId, sectorId]);
+  }
+
+
   getBySector(sectorId: string) {
     return this.db.raw(`
       SELECT u.*, u.areaId, a.sectorId

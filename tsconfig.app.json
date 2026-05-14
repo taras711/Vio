@@ -24,6 +24,7 @@
 
     /* 🔥 Alias konfigurace MUSÍ být tady */
     "baseUrl": "src",
+    
     "paths": {
       "@src/*": ["*"],
       "@features/*": ["features/*"],
@@ -37,8 +38,8 @@
       "@layout/*": ["core/ui/layout/*"],
       "@pages/*": ["core/ui/pages/*"],
       "@auth/*": ["auth/*"],
-      "@hooks/*": ["core/ui/hooks/*"],
+      "@hooks/*": ["core/ui/hooks/*"]
     },
   },
-  "include": ["src"]
+  "include": ["src"],
 }

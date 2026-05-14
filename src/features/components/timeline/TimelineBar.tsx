@@ -1,15 +1,21 @@
-import { Box, IconButton, Tooltip, Typography } from "@mui/material";
-import { ChevronLeft, ChevronRight, ExpandLess, ExpandMore } from "@mui/icons-material";
+import { Box, IconButton, Tooltip, Typography, Drawer, Backdrop, CircularProgress } from "@mui/material";
+import { ChevronLeft, ChevronRight, ChevronUp, ChevronDown } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import api from "@src/utils/api";
 import { useTimeline } from "./TimelineContext";
 import { TimelineHeader } from "./TimelineHeader";
-import type { TimelineEvent } from "@src/types/timelineEvent";
+import type { EventDetail, TimelineEvent } from "../../../../shared/types";
 import { useNavigate } from "react-router-dom";
 import { pages } from "@app/routes/registry";
+import { TimelineEventDetailPanel } from "./TimelineEventDetailPanel";
+
 
 export function TimelineBar() {
   const { events, now, windowHours, setWindowHours } = useTimeline();
   const [open, setOpen] = useState(false);
+  const [detailEvent, setDetailEvent] = useState<EventDetail | null>(null);
+  const [detailEventLoading, setDetailEventLoading] = useState(false);
+
   const containerRef = useRef<HTMLDivElement | null>(null);
   const navigate = useNavigate();
 
@@ -31,7 +37,6 @@ export function TimelineBar() {
     const el = containerRef.current;
     // jednoduchý střed – zatím bez přesného výpočtu px
     el.scrollTo({ left: el.scrollWidth / 2 - el.clientWidth / 2, behavior: "smooth" });
-    console.log("SCROLL:", el.scrollWidth, el.clientWidth);
   }, [windowHours]);
 
   function getEventOpacity(ev: TimelineEvent) {
@@ -45,6 +50,36 @@ export function TimelineBar() {
    function getEventColor(ev: TimelineEvent) {
     return ev.color || "#1976d2";
    }
+
+function getEventStyleByStatus(ev: TimelineEvent) {
+  const status = ev.status ?? "scheduled";
+
+  if (status === "cancelled") {
+    return {
+      backgroundColor: "#000000b8",
+      color: "#fff",
+      opacity: 0.5,
+      textDecoration: "line-through"
+    };
+  }
+
+  if (status === "completed") {
+    return {
+      backgroundColor: "#4caf50",
+      color: "#fff",
+      opacity: 0.9,
+      textDecoration: "none"
+    };
+  }
+
+  // scheduled
+  return {
+    backgroundColor: getEventColor(ev),
+    color: "#fff",
+    opacity: getEventOpacity(ev),
+    textDecoration: "none"
+  };
+}
 
 
 function formatRelativeTime(start: number, end?: number) {
@@ -79,8 +114,18 @@ function formatDuration(ms: number) {
   return `${min} min`;
 }
 
+async function openDetail(ev: TimelineEvent) {
+  setDetailEventLoading(true);
+  setDetailEvent(null);
 
-  // jednoduchý mapping eventů do pozice (zatím hrubý)
+  const res = await api.get(`/events/${ev.id}/detail`);
+  const data = await res.data;
+
+  setDetailEvent(data);
+  setDetailEventLoading(false);
+}
+
+  // jednoduchý mapping eventů do pozice
   function renderEvents() {
     if (!events.length) {
       return (
@@ -100,22 +145,23 @@ return events.map((ev) => {
 
   const leftPercent = startRatio * 100;
   const widthPercent = Math.max((endRatio - startRatio) * 100, 0.5);
-
+const style = getEventStyleByStatus(ev);
 return (
   <Tooltip
+    
     key={ev.id}
     title={
       <Box sx={{ p: 0.5 }}>
         <Typography variant="caption" sx={{ fontWeight: 600 }}>
           {ev.title}
         </Typography>
-        <Typography variant="caption">
-          {formatRelativeTime(ev.start, ev.end)}
+        <Typography variant="caption" sx={{ fontStyle: "italic", opacity: 0.8 }}>
+          {formatRelativeTime(ev.start, ev.end)} {ev.status === "cancelled" ? "(Zrušeno)" : ev.status === "completed" ? "(Dokončeno)" : ""}
         </Typography>
       </Box>
     }
     arrow
-    placement="top"
+    placement="top-end"
   >
     <Box
       sx={{
@@ -130,14 +176,12 @@ return (
         top: `calc(50% - ${open ? 5 : 10.5}px)`,
         padding: "5px 5px",
         borderRadius: 0.5,
-        backgroundColor: getEventColor(ev),
-        opacity: getEventOpacity(ev),
-        color: "white",
         fontSize: 11,
         cursor: "pointer",
         zIndex: 1,
+        ...style
       }}
-      onClick={() => handleEventClick(ev)}
+      onClick={() => openDetail(ev)}
     >
       {ev.title}
     </Box>
@@ -150,11 +194,7 @@ return (
   return (
     <Box
       sx={{
-        position: "sticky",
-        top: 72, // podle výšky tvého TopBaru
         zIndex: 10,
-        marginLeft: "24px",
-        marginRight: "32px",
         borderBottom: "1px solid #c4d8df"
       }}
     >
@@ -171,7 +211,7 @@ return (
         {/* Levý panel – toggle + info */}
         <Box sx={{ display: "flex", alignItems: "center", gap: 1, mr: 2 }}>
           <IconButton size="small" onClick={() => setOpen((v) => !v)}>
-            {open ? <ExpandLess fontSize="small" /> : <ExpandMore fontSize="small" />}
+            {open ? <ChevronUp size="15" /> : <ChevronDown size="15" />}
           </IconButton>
           <Typography variant="caption" sx={{ fontWeight: 600, opacity: open ? 1 : "0.3" }}>
             Timeline ({windowHours}h)
@@ -187,16 +227,17 @@ return (
                 disabled={windowHours <= 2}
                 onClick={() => setWindowHours(Math.max(2, windowHours - 1))}
               >
-                <ChevronLeft fontSize="small" />
+                <ChevronLeft size="15" />
               </IconButton>
             </span>
           </Tooltip>
           <Tooltip title="Maximize window">
             <IconButton
               size="small"
+              disabled={windowHours >= 12}
               onClick={() => setWindowHours(Math.min(12, windowHours + 1))}
             >
-              <ChevronRight fontSize="small" />
+              <ChevronRight size="15" />
             </IconButton>
           </Tooltip>
         </Box>
@@ -246,6 +287,51 @@ return (
           
         </Box>
       </Box>
+      <Drawer
+        anchor="right"
+        open={Boolean(detailEventLoading || detailEvent)}
+        onClose={() => {
+          setDetailEvent(null);
+          setDetailEventLoading(false);
+        }}
+        variant="persistent"
+        hideBackdrop
+        ModalProps={{
+          keepMounted: true,
+          disableEnforceFocus: true,
+          disableAutoFocus: true,
+          disableRestoreFocus: true,
+        }}
+        PaperProps={{
+          sx: {
+            backgroundColor: "#ffffffe0",
+            backdropFilter: "blur(15px)",
+            width: 340,
+            p: 2,
+            borderLeft: "1px solid #ddd",
+            boxShadow: "-2px 0 6px rgba(0,0,0,0.1)",
+            top: "72px",
+            height: "calc(100vh - 105px)",
+          },
+        }}
+      >
+        {detailEventLoading && (
+          <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+            <CircularProgress />
+          </Box>
+        )}
+        {!detailEventLoading && detailEvent && (
+          <TimelineEventDetailPanel
+            event={detailEvent}
+            onClose={() => setDetailEvent(null)}
+            setDetailEvent={setDetailEvent}
+            onEdit={() => {
+              setDetailEvent(null);
+              // onEditEvent?.(detailEvent);
+            }}
+          />
+        )}
+      </Drawer>
     </Box>
   );
 }

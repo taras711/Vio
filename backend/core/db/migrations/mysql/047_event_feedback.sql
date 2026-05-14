@@ -2,7 +2,10 @@ CREATE TABLE IF NOT EXISTS event_feedback (
     id VARCHAR(36) NOT NULL,
     eventId VARCHAR(36) NOT NULL,
     authorUserId VARCHAR(36) NOT NULL,
-
+    threadId VARCHAR(36) NOT NULL AFTER id,
+    replyToId VARCHAR(36) NULL AFTER message,
+    mentions TEXT NULL AFTER replyToId;
+    authorId VARCHAR(36) NOT NULL,
     visibility ENUM(
         'organizer_only',
         'selected_attendees',

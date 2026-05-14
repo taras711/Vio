@@ -3,6 +3,7 @@ export interface RouteMeta {
   breadcrumbKey: string;
   path: string;
   permission?: string;
+  modify?: { fn: (resource: any, key: string, value: string) => any };
 }
 
 export interface RouteHandle {

@@ -39,6 +39,17 @@ export class UserService {
     return user ? mapUser(user) : null;
   }
 
+  async getByIds(ids: string[]): Promise<User[]> {
+    if (!ids.length) return [];
+
+    const placeholders = ids.map(() => "?").join(",");
+    const sql = `SELECT * FROM users WHERE id IN (${placeholders})`;
+
+    const rows = await this.db.raw(sql, ids);
+    return rows.map(mapUser);
+  }
+
+
   /**
    * Finds a user by email.
    * Returns the user if found, or null if not found.

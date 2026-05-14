@@ -20,7 +20,7 @@ export function Component() {
         {allowedTypes.map(([key, cfg]) => (
             <AddTile
                 key={key}
-                title={cfg.title}
+                title={cfg.title || key}
                 description={cfg.description}
                 icon={<cfg.icon />}
                 onClick={() => navigate(`/new/${key}`)}

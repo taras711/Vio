@@ -21,6 +21,16 @@ export class UserQueryController {
     res.json(users);
   };
 
+  getByAreaVisibility = async (req: Request<{ areaId: string }>, res: Response) => {
+    const users = await this.users.getByAreaVisibility(req.params.areaId);
+    res.json(users);
+  }
+
+  getByAreaSectorVisibility = async (req: Request<{ areaId: string; sectorId: string }>, res: Response) => {
+    const users = await this.users.getByAreaSectorVisibility(req.params.areaId, req.params.sectorId);
+    res.json(users);
+  }
+
     getVisible = async (req: Request, res: Response) => {
     const areaId = req.auth?.areaId;
 

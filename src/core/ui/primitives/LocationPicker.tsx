@@ -1,5 +1,7 @@
+import { useState } from "react";
 import { EntityPicker } from "./EntityPicker";
 import { MapPin } from "lucide-react";
+import { EntityPickerDialog } from "./PickerDialog";
 
 interface Location {
   id: string;
@@ -27,7 +29,9 @@ export function LocationPicker({
   label = "Location",
   fullWith = false
 }: LocationPickerProps) {
+  const [openUserPicker, setOpenUserPicker] = useState(false);
   return (
+    <>
     <EntityPicker<Location>
       value={value ?? null}
       onChange={onChange}
@@ -37,6 +41,7 @@ export function LocationPicker({
       icon={<MapPin size={18} />}
       getId={(l) => String(l.id)}
       getPrimaryText={(l) => l.name}
+      onOpenDialog={() => setOpenUserPicker(true)}
       getSecondaryText={(l) =>
         `${l.areaId ?? "No area"} / ${l.sectorId ?? "No sector"}`
       }
@@ -45,5 +50,18 @@ export function LocationPicker({
       }
       fullWidth={fullWith}
     />
+    <EntityPickerDialog<Location>
+      key={locations.length}
+      open={openUserPicker}
+      onClose={() => setOpenUserPicker(false)}
+      items={locations}
+      getId={(l) => String(l.id)}
+      getPrimaryText={(l) => l.name}
+      getSecondaryText={(l) =>
+        `${l.areaId ?? "No area"} / ${l.sectorId ?? "No sector"}`
+      }
+      onSelect={onChange}
+    />
+    </>
   );
 }

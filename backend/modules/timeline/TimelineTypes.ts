@@ -31,6 +31,7 @@ export interface TimelineEventRow {
   endTime: number;
   color: string;
   type: string;
+  status: "scheduled" | "in-progress" | "completed" | "cancelled";
   description: string | null;
   locationId: string | null;
   attendeeStatus: AttendeeStatus | null;
@@ -45,6 +46,8 @@ export interface TimelineEventDto {
   start: number;
   end: number;
   color: string;
+  status?: "scheduled" | "in-progress" | "completed" | "cancelled";
+  description: string | null;
   source: {
     module: string;
     entityId: string;

@@ -4,6 +4,10 @@ CREATE TABLE IF NOT EXISTS events (
     name VARCHAR(255) NOT NULL,
     startTime BIGINT NOT NULL,
     endTime BIGINT NOT NULL,
+    organizerId VARCHAR(36) NOT NULL,
+    status ENUM('scheduled', 'cancelled', 'completed') NOT NULL DEFAULT 'scheduled',
+    allDay BOOLEAN NOT NULL DEFAULT FALSE,
+    isPrivate BOOLEAN NOT NULL DEFAULT FALSE,
     color VARCHAR(255) NOT NULL,
     type ENUM('event', "meeting", 'training', 'inspection', 'appointment') NOT NULL DEFAULT 'meeting',
     feedbackEnabled BOOLEAN NOT NULL DEFAULT TRUE,
@@ -22,7 +26,13 @@ CREATE TABLE IF NOT EXISTS events (
     -- TRIGGER: Attendees: Before event starts
     attendeesBeforeStartApp BOOLEAN NOT NULL DEFAULT TRUE,
     attendeesBeforeStartEmail BOOLEAN NOT NULL DEFAULT FALSE,
-    
+
+    -- Recurrence
+    isRecurring TINYINT(1) NOT NULL DEFAULT 0,
+    recurrenceRule TEXT NULL,
+    recurrenceEnd BIGINT NULL,
+    recurrenceCount INT NULL;
+
     description TEXT NULL,
     createdAt BIGINT NOT NULL,
     updatedAt BIGINT NOT NULL,

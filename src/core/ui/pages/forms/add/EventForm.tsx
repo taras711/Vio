@@ -1,4 +1,4 @@
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, useFormContext } from "react-hook-form";
 import { Settings, X} from "lucide-react";
 import {
   Box,
@@ -11,6 +11,7 @@ import {
   Paper,
   Switch,
   FormControlLabel,
+  FormGroup,
   Checkbox,
   Table,
   TableBody,
@@ -18,27 +19,25 @@ import {
   Select,
   TableHead,
   TableRow,
-  Divider
+  Divider,
+  FormControl,
+  InputLabel,
 } from "@mui/material";
-import { useAuth } from "@src/auth/AuthContext";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { UsersService } from "@src/services/users";
-import { usePageLoader } from "@ui/hooks/UsePageLoader";
-import dayjs, { Dayjs } from "dayjs";
-import { Drawer } from "@mui/material";
+import { useState } from "react";
+import dayjs from "dayjs";
 import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
+import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { ColorPickerField } from "@ui/primitives/ColorPickerField";
 import useMediaQuery from "@mui/material/useMediaQuery";
 
-import { useScopedData, type DataScope } from "@src/lib/hooks/useScopedData";
-import { mapAttendeeToUser } from "@src/utils/mapAttendeeToUser";
-import { AreasService } from "@src/services/area/AreasService";
-import { SectorsService } from "@src/services/sector/SectorsService";
+import { type DataScope } from "@src/lib/hooks/useScopedData";
 import { UserPicker } from "@ui/primitives/UserPicker";
 import { LocationPicker } from "@ui/primitives/LocationPicker";
+import { RRule } from "rrule"; //For parsing/generating recurrence rules, optional but useful for complex patterns
+
 
 export interface User {
   id: string;
@@ -51,41 +50,7 @@ export interface User {
   avatar?: string;
   sectorId?: string;
   areaId?: string;
-}
-
-export interface AttendeeInput {
-  userId?: string;
-  roleId?: string;
-  sectorId?: string;
-  locationId?: string;
-  isOrganizer: boolean;
-  required: boolean;
-}
-
-export interface EventFormProps {
-  endpoint: string;
-}
-
-export interface EventFormValues {
-  name: string;
-  locationId: string;
-  startTime: number;
-  endTime: number;
-  color: string;
-  type: string;
-  description?: string;
-  feedbackEnabled: boolean;
-  notifyOrganizerOnFeedback: boolean;
-  notifyAttendeesOnUpdate: boolean;
-  notifyAttendeesBeforeStart: boolean;
-  deliveryOrganizerFeedbackApp: boolean;
-  deliveryOrganizerFeedbackEmail: boolean;
-
-  deliveryAttendeesUpdateApp: boolean;
-  deliveryAttendeesUpdateEmail: boolean;
-
-  deliveryAttendeesBeforeStartApp: boolean;
-  deliveryAttendeesBeforeStartEmail: boolean;
+  role?: "user" | "admin" | "superAdmin";
 }
 
 export interface EventData {
@@ -99,6 +64,106 @@ export interface EventData {
   description?: string;
 
   feedbackEnabled: boolean; // ← TADY
+}
+
+export interface AttendeeInput {
+  userId?: string;
+  roleId?: string;
+  sectorId?: string;
+  locationId?: string;
+  isOrganizer: boolean;
+  required: boolean;
+}
+
+export interface EventFormProps {
+  id?: string;
+  eventId?: string;
+  endpoint: string;
+  onOpenSettings: () => void;
+  user: User;
+  organizerId: string | null;
+  attendees: AttendeeInput[];
+  areas: any[];
+  sectors: any[];
+  selectedArea: string | null;
+  selectedSector: string | null;
+  areaId: string | null;
+  sectorId: string | null;
+  scope: DataScope;
+  isRecurring: boolean;
+  repeatType: "daily" | "weekly" | "monthly";
+  interval: number;
+  selectedDays: string[];
+  endType: "never" | "after" | "until";
+  occurrenceCount: number;
+  endDate: number | null;
+  mappedUsers: any[];
+  locations: any[];
+  allDay: boolean | undefined;
+  isPrivate: boolean | undefined;
+  status: "scheduled" | "in-progress" | "cancelled" | "completed";
+  onStatusChange: (status: "scheduled"  | "in-progress" | "cancelled" | "completed") => void;
+
+  onOrganizerChange: (v: string) => void;
+  onAttendeesChange: (v: AttendeeInput[]) => void;
+  onAreaChange: (v: string) => void;
+  onSectorChange: (v: string) => void;
+  onSelectedAreaChange: (v: string) => void;
+  onSelectedSectorChange: (v: string) => void;
+  onScopeChange: (v: DataScope) => void;
+  onRecurringChange: (v: boolean) => void;
+  onRepeatTypeChange: (v: "daily" | "weekly" | "monthly") => void;
+  onIntervalChange: (v: number) => void;
+  toggleDay: (day: string) => void;
+  onEndTypeChange: (v: "never" | "after" | "until") => void;
+  onOccurrenceCountChange: (v: number) => void;
+  onEndDateChange: (v: number | null) => void;
+  onSubmit: (data: EventFormValues) => void;
+  addAttendee: () => void;
+  updateAttendee: <K extends keyof AttendeeInput>(
+    index: number,
+    field: K,
+    value: AttendeeInput[K]
+  ) => void;
+  removeAttendee: (index: number) => void;
+  closeDrawer: () => void;
+  onAllDayChange: (v: boolean | undefined) => void;
+  onIsPrivateChange: (v: boolean | undefined) => void;
+  handleDelete: (id: string) => void;
+
+}
+
+
+export interface EventFormValues 
+{
+  id?: string;
+  eventId?: string;
+  name: string;
+  locationId: string;
+  startTime: number;
+  endTime: number;
+  color: string;
+  type: string;
+  description?: string;
+  attendees?: AttendeeInput[];
+
+  feedbackEnabled: boolean;
+  notifyOrganizerOnFeedback: boolean;
+  notifyAttendeesOnUpdate: boolean;
+  notifyAttendeesBeforeStart: boolean;
+
+  deliveryOrganizerFeedbackApp: boolean;
+  deliveryOrganizerFeedbackEmail: boolean;
+  deliveryAttendeesUpdateApp: boolean;
+  deliveryAttendeesUpdateEmail: boolean;
+  deliveryAttendeesBeforeStartApp: boolean;
+  deliveryAttendeesBeforeStartEmail: boolean;
+
+  isRecurring: boolean;
+  allDay?: boolean;
+  isPrivate?: boolean;
+  status?: "scheduled" | "in-progress" | "cancelled" | "completed";
+  onStatusChange?: (status: "scheduled" | "in-progress" | "cancelled" | "completed") => void;
 }
 
 interface EventSettingsPanelProps {
@@ -118,226 +183,87 @@ interface EventSettingsPanelProps {
   onClose: () => void;
 }
 
-export function EventForm({ endpoint }: EventFormProps) {
-  const { user } = useAuth()!;
-  
-  const [organizerId, setOrganizerId] = useState<string | undefined>(undefined);
-
-  const [attendees, setAttendees] = useState<AttendeeInput[]>([]);
-  const [settingsOpen, setSettingsOpen] = useState(false);
-
-  const [areas, setAreas] = useState<any[]>([]);
-  const [sectors, setSectors] = useState<any[]>([]);
-
-  const [selectedArea, setSelectedArea] = useState<string | null>(null);
-  const [selectedSector, setSelectedSector] = useState<string | null>(null);
-
-  const [areaId, setAreaId] = useState<string | null>(null);
-  const [sectorId, setSectorId] = useState<string | null>(null);
+export function EventForm(props: EventFormProps) {
 
   const [scope, setScope] = useState<DataScope>("visible");
 
   const isMobile = useMediaQuery("(max-width: 600px)");
 
-  useEffect(() => {
-    if (user?.role) {
-      setScope(user.role === "superAdmin" ? "all" : "visible");
-    }
-  }, [user?.role]);
-
-  const resolvedAreaId =
-    scope === "area" ? user.areaId :
-    scope === "select-area" ? selectedArea :
-    scope === "area-sector" ? selectedArea :
-    null;
-
-  const resolvedSectorId =
-    scope === "sector" ? user.sectorId :
-    scope === "select-sector" ? selectedSector :
-    scope === "area-sector" ? selectedSector :
-    null;
-
-  const { locations: _locations, attendees: candidateAttendees, loading: _loading } = useScopedData(
-    scope,
-    resolvedAreaId,
-    resolvedSectorId
-  );
-
-  const mappedUsers = useMemo(() => {
-    return (candidateAttendees ?? []).map(a => ({
-      ...mapAttendeeToUser(a),
-      id: String(a.id),
-    }));
-  }, [candidateAttendees]);
-
-
-  const { control, handleSubmit, register, watch, setValue } = useForm<EventFormValues>({
-    defaultValues: {
-      name: "",
-      locationId: "",
-      startTime: Date.now(),
-      endTime: Date.now() + 3600000,
-      color: "#2196f3",
-      type: "meeting",
-      description: "",
-      feedbackEnabled: true,
-      notifyOrganizerOnFeedback: true,
-      notifyAttendeesOnUpdate: true,
-      notifyAttendeesBeforeStart: false,
-      deliveryOrganizerFeedbackApp: true,
-      deliveryOrganizerFeedbackEmail: false,
-
-      deliveryAttendeesUpdateApp: true,
-      deliveryAttendeesUpdateEmail: false,
-
-      deliveryAttendeesBeforeStartApp: true,
-      deliveryAttendeesBeforeStartEmail: false,
-    },
-  });
-
-  const loadUsers = useCallback(async () => {
-    const res = await UsersService.list();
-    const arr = Array.isArray(res.data) ? res.data : [];
-
-    return arr.map((u: any) => ({
-      id: String(u.id),
-      name: u.name,
-      email: u.email,
-      position: u.position ?? "",
-      department: u.department ?? "",
-      avatarUrl: u.avatarUrl ?? "",
-      fullName: u.name,
-    }));
-  }, []);
-
-  useEffect(() => {
-    if (!organizerId) return;
-
-    setAttendees((prev) =>
-      prev.filter((a) => a.userId !== organizerId)
-    );
-  }, [organizerId]);
-
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const a = await AreasService.list();
-        const s = await SectorsService.list();
-
-        console.log("AREAS:", a.data);
-        console.log("SECTORS:", s.data);
-
-        setAreas(Array.isArray(a.data) ? a.data : []);
-        setSectors(Array.isArray(s.data) ? s.data : []);
-      } catch (err) {
-        console.error("LOAD ERROR:", err);
-      }
-    };
-
-    load();
-  }, []);
-
-  useEffect(() => {
-    if (user?.id && organizerId === undefined) {
-      setOrganizerId(String(user.id));
-    }
-  }, [user?.id, organizerId]);
-
-  const addAttendee = () => {
-    setAttendees((prev) => [
-      ...prev,
-      { userId: "", isOrganizer: false, required: true },
-    ]);
-  };
-
-  const updateAttendee = <K extends keyof AttendeeInput>(
-    index: number,
-    field: K,
-    value: AttendeeInput[K]
-  ) => {
-    setAttendees((prev) => {
-      const id = String(value);
-
-      if (id === String(organizerId)) return prev;
-      const next = [...prev];
-      next[index] = { ...next[index], [field]: value };
-      return next;
-    });
-  };
-
-  const removeAttendee = (index: number) => {
-    setAttendees((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const onSubmit = async (data: EventFormValues) => {
-    const seen = new Set<string>();
-
-    const cleanAttendees = attendees.filter((a) => {
-      if (!a.userId) return false;
-      if (a.userId === organizerId) return false;
-      if (seen.has(a.userId)) return false;
-
-      seen.add(a.userId);
-      return true;
-    });
-
-    const payload = {
-      ...data,
-      organizerId,
-      attendees: cleanAttendees,
-    };
-
-    await fetch(endpoint, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-  };
-
-  if (!organizerId) {
+  const { control, handleSubmit, register, watch, setValue } = useFormContext<EventFormValues>();
+  
+  if (!props.organizerId) {
     return <Typography>Loading...</Typography>;
   }
 
   return (
-    <Box component="form" onSubmit={handleSubmit(onSubmit)} sx={{ maxWidth: 900 }}>
-      <Grid container spacing={2} sx={{ mb: 2 }}>
+    <Box component="form" onSubmit={handleSubmit(props.onSubmit)} sx={{ maxWidth: 900 }}>
+      <Grid container spacing={2} sx={{ mb: 2, mt: 2 }}>
+        {props.eventId && (
+          <Grid item xs={12}>
+              <Grid item xs={12} md={12}>
+                <FormControl fullWidth sx={{ mb: 2 }}>
+                  <InputLabel>Status</InputLabel>
+                    <Select
+                      value={props.status ?? "scheduled"}
+                      label="Status"
+                      onChange={(e) => props.onStatusChange(e.target.value as any)}
+                    >
+                      <MenuItem value="scheduled">Scheduled</MenuItem>
+                      <MenuItem value="cancelled">Cancelled</MenuItem>
+                      <MenuItem value="completed">Completed</MenuItem>
+                    </Select>
+                  </FormControl>
+              </Grid>
+          </Grid>
+        )}
         <Grid item xs={12}>
           <Typography variant="h6" fontWeight={600} sx={{ mb: 1, mt: 1 }}>
             Choose scope
           </Typography>
+          <IconButton sx={{ position: "absolute", top: 16, right: 16 }} onClick={props.closeDrawer}>
+          <X size={20} />
+        </IconButton>
         </Grid>
         <Grid item xs={4}>
           <Select
             label="Data source"
-            value={scope}
-            onChange={(e) => setScope(e.target.value as DataScope)}
+            value={props.scope}
+            onChange={(e) => props.onScopeChange(e.target.value as DataScope)}
+
             fullWidth
           >
             <MenuItem value="visible">Visible</MenuItem>
-            <MenuItem value="area" disabled={!user.areaId}>My Area ({user.areaId ?? "None"})</MenuItem>
-            <MenuItem value="sector" disabled={!user.sectorId}>My Sector ({user.sectorId ?? "None"})</MenuItem>
+            <MenuItem value="area" disabled={!props.user.areaId}>My Area ({props.user.areaId ?? "None"})</MenuItem>
+            <MenuItem value="sector" disabled={!props.user.sectorId}>My Sector ({props.user.sectorId ?? "None"})</MenuItem>
             <MenuItem value="area-sector">Area → Sector</MenuItem>
+            <MenuItem value="area-visibility" disabled={!props.user.areaId}>
+              Area Alliance (Visibility)
+            </MenuItem>
+
+            <MenuItem value="area-sector-visibility" disabled={!props.user.areaId || !props.user.sectorId}>
+              Area Alliance → Sector
+            </MenuItem>
             <MenuItem value="select-area">Select Area…</MenuItem>
             <MenuItem value="select-sector">Select Sector…</MenuItem>
-            {user.role === "superAdmin" && (
+            {props.user.role === "superAdmin" && (
               <MenuItem value="all">All Areas (Corporate)</MenuItem>
             )}
           </Select>
         </Grid>
         <Grid item xs={4}>
-          {(scope === "area-sector" || scope === "select-area") && (
+          {(props.scope === "area-sector" || props.scope === "select-area" || props.scope === "area-visibility" || props.scope === "area-sector-visibility") && (
             <Grid item xs={12}>
               <Select
                 label="Area"
-                value={selectedArea}
+                value={props.areaId || props.selectedArea}
                 onChange={(e) => {
                   const val = String(e.target.value);
-                  setSelectedArea(val);
-                  setAreaId(val);
+                  props.onSelectedAreaChange(val);
+                  props.onAreaChange(val);
                 }}
                 fullWidth
               >
-                {areas.map(a => (
+                {props.areas.map(a => (
                   <MenuItem key={a.id} value={a.id}>{a.name}</MenuItem>
                 ))}
               </Select>
@@ -345,19 +271,19 @@ export function EventForm({ endpoint }: EventFormProps) {
           )}
         </Grid>
         <Grid item xs={4}>
-          {(scope === "area-sector" || scope === "select-sector") && (
+          {(props.scope === "area-sector" || props.scope === "select-sector" || props.scope === "area-sector-visibility") && (
             <Grid item xs={12}>
               <Select
                 label="Sector"
-                value={selectedSector}
+                value={props.sectorId || props.selectedSector}
                 onChange={(e) => {
                   const val = String(e.target.value);
-                  setSelectedSector(val);
-                  setSectorId(val);
+                  props.onSelectedSectorChange(val);
+                  props.onSectorChange(val);
                 }}
                 fullWidth
               >
-                {sectors.map(s => (
+                {props.sectors.map(s => (
                   <MenuItem key={s.id} value={s.id}>{s.name}</MenuItem>
                 ))}
               </Select>
@@ -367,31 +293,30 @@ export function EventForm({ endpoint }: EventFormProps) {
       </Grid>
       <Divider sx={{ mb: 2 }} />
       <Grid container spacing={2} sx={{ mb: 2 }}>
-        <Grid item xs={12} md={2}>
+        <Grid item xs={12} md={12}>
           <Typography variant="h6">
             Organizer
           </Typography>
         </Grid>
         <Grid item xs={12} md={10} >
           <UserPicker
-            currentUserName={user.name}
-            value={organizerId}
+            required
+            currentUserName={props.user.name}
+            value={props.organizerId || ""}
             label="Organizer"
-            users={mappedUsers}
-            onChange={(id) => setOrganizerId(id)}
+            users={props.mappedUsers}
+            onChange={(id) => props.onOrganizerChange(id)}
             isOrganizer={true}
-            currentUserId={String(user.id)}
+            currentUserId={String(props.user.id)}
             
             excludedIds={[
-              organizerId, // 🔥 FIX: organizátor je vždy zakázaný
-              ...attendees
+              props.organizerId, // 🔥 FIX: organizátor je vždy zakázaný
+              ...props.attendees
                 .map(a => a.userId)
                 .filter((id): id is string => typeof id === "string" && id.length > 0)
             ].filter(Boolean)}
             fullWidth={true}
           />
-
-
         </Grid>
       </Grid>
       <Divider sx={{ mb: 2 }} />
@@ -414,7 +339,7 @@ export function EventForm({ endpoint }: EventFormProps) {
           <LocationPicker
             value={watch("locationId") ?? null}
             onChange={(id) => setValue("locationId", id)}
-            locations={_locations ?? []}
+            locations={props.locations ?? []}
             excludedIds={[]} // pokud chceš zakázat některé lokace
             label="Location"
           />
@@ -437,7 +362,10 @@ export function EventForm({ endpoint }: EventFormProps) {
                   value={field.value ? dayjs(field.value) : null}
                   onChange={(newValue) => {
                     if (newValue && newValue.isValid()) {
-                      field.onChange(newValue.valueOf());
+                      const fixed = props.allDay
+                        ? newValue.startOf("day").valueOf()
+                        : newValue.valueOf(); // pokud chceš zachovat čas
+                      field.onChange(fixed);
                     }
                   }}
                   renderInput={(params) => <TextField {...params} fullWidth />}
@@ -458,7 +386,10 @@ export function EventForm({ endpoint }: EventFormProps) {
                   value={field.value ? dayjs(field.value) : null}
                   onChange={(newValue) => {
                     if (newValue && newValue.isValid()) {
-                      field.onChange(newValue.valueOf());
+                      const fixed = props.allDay
+                        ? newValue.endOf("day").valueOf()
+                        : newValue.valueOf();
+                      field.onChange(fixed);
                     }
                   }}
                   renderInput={(params) => <TextField {...params} fullWidth />}
@@ -467,6 +398,59 @@ export function EventForm({ endpoint }: EventFormProps) {
             )}
           />
         </Grid>
+        <Grid item xs={4}>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={props.isRecurring}
+                onChange={(e) => props.onRecurringChange(e.target.checked)}
+              />
+            }
+            label="Repeat"
+          />
+        </Grid>
+        <Grid item xs={4}>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={props.allDay}
+                onChange={(e) => props.onAllDayChange(e.target.checked)}
+              />
+            }
+            label="All-day"
+          />
+        </Grid>
+        <Grid item xs={4}>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={props.isPrivate}
+                onChange={(e) => props.onIsPrivateChange(e.target.checked)}
+              />
+            }
+            label="Private"
+          />
+
+        </Grid>
+          {props.isRecurring && (
+            <RecurrenceSection
+              repeatType={props.repeatType}
+              setRepeatType={props.onRepeatTypeChange}
+              interval={props.interval}
+              setInterval={props.onIntervalChange}
+              selectedDays={props.selectedDays}
+              toggleDay={props.toggleDay}
+              endType={props.endType}
+              setEndType={props.onEndTypeChange}
+              occurrenceCount={props.occurrenceCount}
+              setOccurrenceCount={props.onOccurrenceCountChange}
+              endDate={props.endDate}
+              setEndDate={props.onEndDateChange}
+            />
+          )}
+
+          
+        
       </Grid>
       <Divider sx={{ mb: 2 }} />
       <Typography variant="h6" sx={{ mb: 2 }}>
@@ -474,7 +458,7 @@ export function EventForm({ endpoint }: EventFormProps) {
       </Typography>
 
       <Grid container spacing={2} sx={{ mt: 4, mb: 2 }}>
-        <Grid item xs={12} md={9}>
+        <Grid item xs={12} md={10}>
           <TextField
             label="Type"
             select
@@ -489,7 +473,7 @@ export function EventForm({ endpoint }: EventFormProps) {
             <MenuItem value="training">Training</MenuItem>
           </TextField>
         </Grid>
-        <Grid item xs={12} md={1}>
+        <Grid item xs={12} md={2}>
           <Controller
             name="color"
             control={control}
@@ -519,7 +503,7 @@ export function EventForm({ endpoint }: EventFormProps) {
         <Grid item xs={12}>
           <FormControlLabel
             control={
-              <IconButton onClick={() => setSettingsOpen(true)}>
+              <IconButton onClick={props.onOpenSettings}>
                 <Settings size={20} />
               </IconButton>
           }
@@ -528,48 +512,22 @@ export function EventForm({ endpoint }: EventFormProps) {
         </Grid>
       </Grid>
       <Divider sx={{ mb: 2 }} />
-      <Grid container spacing={2} sx={{ mt: 2 }}>
-          <Drawer
-              variant="temporary"
-              anchor="right"
-              open={settingsOpen}
-              onClose={() => setSettingsOpen(false)}
-              PaperProps={{ sx: { width: isMobile ? "auto" : 370, p: 3, backgroundColor: "#dfecf1" } }}
-            >
-              <EventSettingsPanel
-                feedbackEnabled={watch("feedbackEnabled")}
-                notifyOrganizerOnFeedback={watch("notifyOrganizerOnFeedback")}
-                notifyAttendeesOnUpdate={watch("notifyAttendeesOnUpdate")}
-                notifyAttendeesBeforeStart={watch("notifyAttendeesBeforeStart")}
-                deliveryOrganizerFeedbackApp={watch("deliveryOrganizerFeedbackApp")}
-                deliveryOrganizerFeedbackEmail={watch("deliveryOrganizerFeedbackEmail")}
-                deliveryAttendeesUpdateApp={watch("deliveryAttendeesUpdateApp")}
-                deliveryAttendeesUpdateEmail={watch("deliveryAttendeesUpdateEmail")}
-                deliveryAttendeesBeforeStartApp={watch("deliveryAttendeesBeforeStartApp")}
-                deliveryAttendeesBeforeStartEmail={watch("deliveryAttendeesBeforeStartEmail")}
-                onChange={(field, value) =>
-                  setValue(field as keyof EventFormValues, value)
-                }
-                onClose={() => setSettingsOpen(false)}
-              />
-            </Drawer>
 
-      </Grid>
       <Typography variant="h6" sx={{ mt: 4, mb: 2 }}>
         Attendees
       </Typography>
 
-{attendees.map((a, i) => {
+{props.attendees.map((a, i) => {
   const excluded = [
-    organizerId,
-    ...attendees
+    props.organizerId,
+    ...props.attendees
       .filter((_, idx) => idx !== i)
       .map((x) => x.userId),
   ].filter(Boolean) as string[];
 
 const attendeeExcludedIds = [
-  organizerId,
-  ...attendees
+  props.organizerId,
+  ...props.attendees
     .filter((_, idx) => idx !== i)
     .map(a => a.userId)
 ].filter(id => id != null);
@@ -578,26 +536,26 @@ const attendeeExcludedIds = [
   return (
     <Paper key={i} sx={{ p: 2, mb: 2 }}>
       <Grid container spacing={2} alignItems="center">
-        <Grid item xs={12} md={4}>
+        <Grid item xs={12} md={5}>
           <UserPicker
             value={a.userId}
-            onChange={(id) => updateAttendee(i, "userId", id)}
-            users={mappedUsers}
-            currentUserId={user.id}
+            onChange={(id) => props.updateAttendee(i, "userId", id)}
+            users={props.mappedUsers}
+            currentUserId={props.user.id}
             isOrganizer={false}
-            currentUserName={user.name}
+            currentUserName={props.user.name}
             excludedIds={attendeeExcludedIds}
           />
         </Grid>
 
-        <Grid item xs={12} md={3}>
+        <Grid item xs={12} md={5}>
           <TextField
             label="Required?"
             select
             fullWidth
             value={a.required ? "yes" : "no"}
             onChange={(e) =>
-              updateAttendee(i, "required", e.target.value === "yes")
+              props.updateAttendee(i, "required", e.target.value === "yes")
             }
           >
             <MenuItem value="yes">Required</MenuItem>
@@ -605,8 +563,8 @@ const attendeeExcludedIds = [
           </TextField>
         </Grid>
 
-        <Grid item xs={12} md={2}>
-          <IconButton color="error" onClick={() => removeAttendee(i)}>
+        <Grid item xs={12} md={2} sx={{ textAlign: "center" }}>
+          <IconButton color="error" onClick={() => props.removeAttendee(i)}>
             <DeleteIcon />
           </IconButton>
         </Grid>
@@ -615,28 +573,152 @@ const attendeeExcludedIds = [
   );
 })}
 
-      <Button variant="outlined" onClick={addAttendee} sx={{ mb: 3 }}>
+      <Button variant="outlined" onClick={props.addAttendee} sx={{ mb: 3 }}>
         Add Attendee
       </Button>
-
-      <Button variant="contained" type="submit" fullWidth>
-        Create Event
-      </Button>
+      <Grid container spacing={2} sx={{ mt: 2, mb: 4 }}>
+        <Grid item xs={12} md={props.eventId ? 6 : 12}>
+          <Button variant="contained" type="submit" fullWidth>
+            {props.eventId ? "Update Event" : "Create Event"}
+          </Button>
+        </Grid>
+        {props.eventId && (
+          <Grid item xs={12} md={6}>
+            <Button
+              color="error"
+              variant="outlined"
+              onClick={() => props.handleDelete(props.eventId!)}
+              fullWidth
+            >
+              Delete Event
+            </Button>
+          </Grid>
+          )}
+      </Grid>
     </Box>
   );
 }
 
-interface UserPickerProps {
-  value: string | undefined; // vždy string (prázdný = nic)
-  onChange: (id: string) => void;
-  users: User[];
-  excludedIds?: string[];
-  label?: string;
-  fullwidth?: boolean;
+
+function RecurrenceSection({
+  repeatType,
+  setRepeatType,
+  interval,
+  setInterval,
+  selectedDays,
+  toggleDay,
+  endType,
+  setEndType,
+  occurrenceCount,
+  setOccurrenceCount,
+  endDate,
+  setEndDate
+}: {
+  repeatType: ("daily" | "weekly" | "monthly");
+  setRepeatType: (v: any) => void;
+  interval: number;
+  setInterval: (n: number) => void;
+  selectedDays: string[];
+  toggleDay: (d: string) => void;
+  endType: "never" | "after" | "until";
+  setEndType: (v: any) => void;
+  occurrenceCount: number;
+  setOccurrenceCount: (n: number) => void;
+  endDate: number | null;
+  setEndDate: (n: number | null) => void;
+}) {
+  return (
+    <>
+      <Grid item xs={12} md={8}>
+        <TextField
+          select
+          label="Repeat"
+          value={repeatType}
+          onChange={(e) => setRepeatType(e.target.value)}
+          fullWidth
+        >
+          <MenuItem value="daily">Daily</MenuItem>
+          <MenuItem value="weekly">Weekly</MenuItem>
+          <MenuItem value="monthly">Monthly</MenuItem>
+        </TextField>
+      </Grid>
+      <Grid item xs={4} md={4}>
+        <TextField
+          label="Every"
+          type="number"
+          value={interval}
+          onChange={(e) => setInterval(Number(e.target.value))}
+          fullWidth
+        />
+      </Grid>
+      {repeatType === "weekly" && (
+        <Grid item xs={12} md={12} sx={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+          <FormGroup row>
+            {["MO","TU","WE","TH","FR","SA","SU"].map(day => (
+              <FormControlLabel
+                key={day}
+                control={
+                  <Checkbox
+                    checked={selectedDays.includes(day)}
+                    onChange={() => toggleDay(day)}
+                  />
+                }
+                label={day}
+              />
+            ))}
+          </FormGroup>
+        </Grid>
+      )}
+
+      
+      <Grid item xs={12}>
+        <TextField
+          select
+          label="Ends"
+          value={endType}
+          onChange={(e) => setEndType(e.target.value)}
+          fullWidth
+        >
+          <MenuItem value="never">Never</MenuItem>
+          <MenuItem value="after">After X occurrences</MenuItem>
+          <MenuItem value="until">Until date</MenuItem>
+        </TextField>
+      </Grid>
+
+      {endType === "after" && (
+        <Grid item xs={12}>
+          <TextField
+            label="Occurrences"
+            type="number"
+            value={occurrenceCount}
+            onChange={(e) => setOccurrenceCount(Number(e.target.value))}
+            fullWidth
+          />
+        </Grid>
+      )}
+
+      {endType === "until" && (
+       <Grid item xs={12}>
+        <LocalizationProvider dateAdapter={AdapterDayjs}>
+          <DatePicker
+            label="Until"
+            value={endDate ? dayjs(endDate) : null}
+            onChange={(newValue) => {
+              if (newValue && newValue.isValid()) {
+                setEndDate(newValue.valueOf());
+              } else {
+                setEndDate(null);
+              }
+            }}
+            renderInput={(params) => <TextField {...params} fullWidth />}
+          />
+        </LocalizationProvider>
+      </Grid>
+
+      )}
+    </>
+  );
 }
-
-
-
 
 function EventSettingsPanel({
   feedbackEnabled,

@@ -23,6 +23,24 @@ export class LocationController {
   }
 }
 
+getByAreaVisibility = async (req: Request<{ areaId: string }>, res: Response) => {
+  try {
+    const locations = await this.locationService.getByAreaVisibility(req.params.areaId);
+    res.json(locations);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to load locations" });
+  }
+}
+
+getByAreaSectorVisibility = async (req: Request<{ areaId: string; sectorId: string }>, res: Response) => {
+  try {
+    const locations = await this.locationService.getByAreaSectorVisibility(req.params.areaId, req.params.sectorId);
+    res.json(locations);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to load locations" });
+  }
+}
+
   async getByArea(req: Request<{ areaId: string }>, res: Response) {
     try {
       const locations = await this.locationService.getByArea(req.params.areaId);

@@ -3,14 +3,17 @@ import { Outlet, useMatches } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useEffect } from "react";
 import { useUI } from "./ui-store";
+import { useTabStore } from "@features/components/bookmark/store/TabStore";
+import { useLocation } from "react-router-dom";
 import { TopBar } from "./Topbar";
 import { SideBar } from "./Sidebar";
-import { TimelineProvider } from "./TimelineContext";
+import { TimelineProvider } from "../../../features/components/timeline/TimelineContext";
 import { RightPanel } from "./RightPanel";
 import { PageHeaderPanel } from "./PageHeaderPanel";
 import type { RouteHandle } from "@app/routes/types";
-import { TimelineBar } from "./TimelineBar";
+import { TimelineBar } from "../../../features/components/timeline/TimelineBar";
 import { SectionErrorBoundary } from "@app/SectionErrorBoundary";
+import { TabBar } from "@src/features/components/bookmark/Bookmark";
 
 function buildBreadcrumbs(meta: any, params: any, t: (key: string) => string) {
   const items = [];
@@ -73,9 +76,17 @@ export function PageLayout() {
 
   const { sidebarOpen, setSidebarOpen } = useUI();
   const matches = useMatches() as Array<{ handle?: RouteHandle; params?: any }>;
-const current = matches.at(-1);
-const meta = current?.handle?.meta ?? null;
-const params = current?.params ?? {};
+  const current = matches.at(-1);
+  const meta = current?.handle?.meta ?? null;
+  const params = current?.params ?? {};
+  // Tabs related
+  const location = useLocation();
+  const { tabs, setActiveTab } = useTabStore();
+
+  useEffect(() => {
+    const found = tabs.find((t) => t.path === location.pathname);
+    if (found) setActiveTab(found.id);
+  }, [location.pathname, tabs]);
 
   const isMobile = useMediaQuery("(max-width: 600px), (max-height: 600px)");
 
@@ -118,6 +129,13 @@ const params = current?.params ?? {};
     };
   }, [isMobile, sidebarOpen]);
 
+  function Modify(resource: any, params: any) {
+    if (!meta?.modify) return null;
+    return Object.entries(params).map(([key, item]) => {
+      if (!meta.modify?.fn) return null;
+      return meta.modify.fn(resource, key, t(item as string));
+    });
+  }
 
   return (
     <TimelineProvider>
@@ -156,18 +174,24 @@ const params = current?.params ?? {};
           flexGrow: 1,
           ml: isMobile ? 0 : `${SIDEBAR_WIDTH}px`,
           transition: "margin-left 0.25s ease",
-          width: "100%",
+          width: "stretch",
         }}
       >
         <TopBar />
-        <TimelineBar />
+        <Box sx={{ mt: "72px", ml: isMobile ? 0 : "24px", mr: isMobile ? 0 : "32px" }} >
+          <TimelineBar />
+          {tabs.length > 0 && <TabBar />}
+        </Box>
         
         
-        <Box component="main" sx={{ mt: "64px", p: isMobile ? 2 : 3 }}>
+        
+        <Box component="main" sx={{ p: isMobile ? 2 : 3 }}>
           {meta && (
             <PageHeaderPanel
-              title={t(meta.titleKey)}
+              title={String(Modify(t(meta.titleKey), params) || t(meta.titleKey))}
               breadcrumbs={breadcrumbs}
+              meta={meta}
+              params={params}
             />
           )}
           <SectionErrorBoundary label="Base layout">

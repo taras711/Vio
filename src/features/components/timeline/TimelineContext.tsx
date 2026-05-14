@@ -1,5 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
-import type { TimelineEvent } from "@src/types/timelineEvent";
+import type { TimelineEvent } from "../../../../shared/types";
 import api from "../../../utils/api";
 import { useAuth } from "@src/auth/AuthContext";
 
@@ -59,6 +59,9 @@ export function TimelineProvider({ children }: { children: React.ReactNode }) {
         end:   item.end   ?? item.start + 60 * 60 * 1000,
         color: item.color ?? "#1976d2",
         source: item.source ?? { module: "events", entityId: item.id },
+        status: item.status ?? "scheduled",
+        description: item.description ?? null,
+        location: item.location ?? null,
         // pass through any extra meta for consumers
         ...(item.meta ? { meta: item.meta } : {}),
       }));

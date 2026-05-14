@@ -14,6 +14,8 @@ export type DataScope =
   | "area-sector"
   | "select-area"
   | "select-sector"
+  | "area-visibility"
+  | "area-sector-visibility"
   | "select-area-sector";
 
 interface ScopedDataResult {
@@ -35,6 +37,26 @@ export function useScopedData(
 
   useEffect(() => {
     let cancelled = false;
+
+    //
+    // ⭐ EARLY GUARDS – zabrání volání endpointů s null
+    //
+    if (
+      (scope === "area" && !areaId) ||
+      (scope === "sector" && !sectorId) ||
+      (scope === "area-sector" && (!areaId || !sectorId)) ||
+      (scope === "select-area" && !areaId) ||
+      (scope === "select-sector" && !sectorId) ||
+      (scope === "select-area-sector" && (!areaId || !sectorId)) ||
+      (scope === "area-visibility" && !areaId) ||
+      (scope === "area-sector-visibility" && (!areaId || !sectorId))
+    ) {
+      setLocations([]);
+      setAttendees([]);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
 
     async function load() {
@@ -44,66 +66,48 @@ export function useScopedData(
 
         switch (scope) {
           case "area":
-            if (!areaId) throw new Error("areaId required for scope=area");
-            loc = await LocationService.getByArea(areaId);
-            att = await AttendeeService.getByArea(areaId);
+            loc = await LocationService.getByArea(areaId!);
+            att = await AttendeeService.getByArea(areaId!);
             break;
 
           case "sector":
-            if (!sectorId) throw new Error("sectorId required for scope=sector");
-            loc = await LocationService.getBySector(sectorId);
-            att = await AttendeeService.getBySector(sectorId);
+            loc = await LocationService.getBySector(sectorId!);
+            att = await AttendeeService.getBySector(sectorId!);
             break;
 
           case "area-sector":
-            console.log("LOAD FINISH", { scope, areaId, sectorId, att });
-            if (!areaId || !sectorId) {
-              loc = [];
-              att = [];
-              
-              break;
-            }
-
-            att = await AttendeeService.getByAreaSector(areaId, sectorId);
-            console.log("LOAD FINISH", { scope, areaId, sectorId, att });
-            loc = await LocationService.getByAreaSector(areaId, sectorId);
-            
-
+            att = await AttendeeService.getByAreaSector(areaId!, sectorId!);
+            loc = await LocationService.getByAreaSector(areaId!, sectorId!);
             break;
 
           case "select-area-sector":
-            if (!areaId || !sectorId) {
-              loc = [];
-              att = [];
-              break;
-            }
-            loc = await LocationService.getByAreaSector(areaId, sectorId);
-            att = await AttendeeService.getByAreaSector(areaId, sectorId);
+            att = await AttendeeService.getByAreaSector(areaId!, sectorId!);
+            loc = await LocationService.getByAreaSector(areaId!, sectorId!);
             break;
 
           case "select-area":
-            if (!areaId) {
-              loc = [];
-              att = [];
-              break;
-            }
-            loc = await LocationService.getByArea(areaId);
-            att = await AttendeeService.getByArea(areaId);
+            loc = await LocationService.getByArea(areaId!);
+            att = await AttendeeService.getByArea(areaId!);
             break;
 
           case "select-sector":
-            if (!sectorId) {
-              loc = [];
-              att = [];
-              break;
-            }
-            loc = await LocationService.getBySector(sectorId);
-            att = await AttendeeService.getBySector(sectorId);
+            loc = await LocationService.getBySector(sectorId!);
+            att = await AttendeeService.getBySector(sectorId!);
             break;
 
           case "visible":
             loc = await LocationService.getVisible();
             att = await AttendeeService.getVisible();
+            break;
+
+          case "area-visibility":
+            att = await AttendeeService.getByAreaVisibility(areaId!);
+            loc = await LocationService.getByAreaVisibility(areaId!);
+            break;
+
+          case "area-sector-visibility":
+            att = await AttendeeService.getByAreaSectorVisibility(areaId!, sectorId!);
+            loc = await LocationService.getByAreaSectorVisibility(areaId!, sectorId!);
             break;
 
           case "all":
@@ -125,15 +129,14 @@ export function useScopedData(
       } finally {
         if (!cancelled) setLoading(false);
       }
-      console.log("LOAD START", { scope, areaId, sectorId });
     }
 
     load();
     return () => {
       cancelled = true;
     };
-    
   }, [scope, areaId, sectorId]);
 
   return { locations, attendees, loading, error };
 }
+

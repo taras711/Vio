@@ -14,6 +14,7 @@ export interface User {
   sectorId?: string;
   areaId?: string;
   isActive: boolean;
+  avatarUrl?: string;
 }
 
 export interface CreateUserDto {

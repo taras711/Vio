@@ -55,6 +55,10 @@ children: [
   handle: {
     meta: {
       path: "/new/:type",
+      modify: {
+        fn: (title: string, key: string, value: string) => title.replace(`%${key}%`, value),
+      },
+      titleKey: "addCreate.title",
       breadcrumbKey: "addCreate.breadcrumb",
     }
   }

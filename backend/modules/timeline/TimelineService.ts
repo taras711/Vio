@@ -28,6 +28,7 @@ export class TimelineService {
         e.type,
         e.description,
         e.locationId,
+        e.status,
         NULL as attendeeStatus,
         0 as isOrganizer,
         (SELECT COUNT(*) FROM event_feedback ef WHERE ef.eventId = e.id) as feedbackCount
@@ -59,6 +60,7 @@ export class TimelineService {
         e.type,
         e.description,
         e.locationId,
+        e.status,
         ea.status     AS attendeeStatus,
         ea.isOrganizer,
         (SELECT COUNT(*) FROM event_feedback ef WHERE ef.eventId = e.id) AS feedbackCount
@@ -112,6 +114,7 @@ export class TimelineService {
         e.type,
         e.description,
         e.locationId,
+        e.status,
         -- personal status (NULL if only matched via role/sector)
         (SELECT ea2.status FROM event_attendees ea2 WHERE ea2.eventId = e.id AND ea2.userId = ?) AS attendeeStatus,
         (SELECT ea2.isOrganizer FROM event_attendees ea2 WHERE ea2.eventId = e.id AND ea2.userId = ?) AS isOrganizer,
@@ -128,6 +131,23 @@ export class TimelineService {
 
   // ─── helpers ────────────────────────────────────────────────────────────────
 
+  private computeStatus(start: number, end: number, dbStatus: string) {
+    const now = Date.now();
+
+    // ruční override
+    if (dbStatus === "cancelled") return "cancelled";
+
+    // ruční override
+    if (dbStatus === "completed") return "completed";
+
+    // automatika
+    if (now < start) return "scheduled";
+    if (now >= start && now <= end) return "in-progress";
+    if (now > end) return "completed";
+
+    return "scheduled";
+}
+
   private mapRow = (row: TimelineEventRow): TimelineEventDto => ({
     id: row.id,
     type: (row.type as TimelineEventType) || "event",
@@ -135,6 +155,8 @@ export class TimelineService {
     start: Number(row.startTime),
     end: Number(row.endTime),
     color: row.color || "#1976d2",
+    status: this.computeStatus(row.startTime, row.endTime, row.status) as "scheduled" | "in-progress" | "completed" | "cancelled",
+    description: row.description,
     source: {
       module: "events",
       entityId: row.id,

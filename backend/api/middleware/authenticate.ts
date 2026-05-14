@@ -8,40 +8,43 @@ import { UserService } from "../../modules/users/UserService";
 
 export function createAuthenticateMiddleware(auth: AuthService, db: any, licenseService: any) {
   return async function authenticate(req: Request, res: Response, next: NextFunction) {
-    const header = req.headers.authorization;
+    // 1) token pouze z cookie
+    const token = req.cookies?.accessToken;
 
-    if (!header?.startsWith("Bearer ")) {
+    if (!token) {
       return res.status(401).json({ error: "Missing token" });
     }
 
-    const token = req.cookies?.accessToken;
+    // 2) ověřit token
     const ctx = await auth.verifyAccessToken(token);
 
     if (!ctx) {
       return res.status(401).json({ error: "Invalid token" });
     }
-    
-    const userService = new UserService(db, licenseService);
 
+    // 3) načíst uživatele
+    const userService = new UserService(db, licenseService);
     const user = await userService.getById(ctx.userId);
+
     if (!user) {
       return res.status(401).json({ error: "User not found" });
     }
 
-req.auth = {
-  userId: ctx.userId,
-  role: toRole(user.role),
-  permissions: user.permissions || [],
-  type: ctx.type,
-  sub: ctx.sub,
-   areaId: user.areaId,
-  sectorId: user.sectorId
-} as AuthContext;
-
+    // 4) naplnit req.auth
+    req.auth = {
+      userId: ctx.userId,
+      role: toRole(user.role),
+      permissions: user.permissions || [],
+      type: ctx.type,
+      sub: ctx.sub,
+      areaId: user.areaId,
+      sectorId: user.sectorId
+    } as AuthContext;
 
     next();
   };
 }
+
 
 function toRole(value: string): Role {
   if (value === "admin" || value === "user" || value === "superadmin") {

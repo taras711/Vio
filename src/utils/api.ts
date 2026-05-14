@@ -12,6 +12,9 @@ api.interceptors.request.use((config) => {
   const csrf = Cookies.get("csrfToken");
   if (csrf) config.headers["x-csrf-token"] = csrf;
 
+  const access = Cookies.get("accessToken");
+  if (access) config.headers.Authorization = `Bearer ${access}`;
+
   return config;
 });
 

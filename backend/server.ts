@@ -45,6 +45,11 @@ import { createSectorRoutes } from "./api/routes/sectors";
 import { UserQueryService } from "./modules/users/UserQueryService";
 import { UserQueryController } from "./modules/users/UserQueryController";
 import { createUserQueryRoutes } from "./api/routes/users";
+import { createEventRoutes } from "./api/routes/events";
+import { EventController } from "./modules/events/event.controller";
+import { EventService } from "./modules/events/event.service";
+import { ChatService } from "./modules/chat/ChatService";
+
 
 function loadServerConfig() {
   const configPath = path.resolve(__dirname, "./config/server.json");
@@ -218,6 +223,20 @@ app.use("/api/timeline", (req, res, next) => {
         { name: "users", factory: createUserModule },
         { name: "machines", factory: createMachinesModule }
     ];
+
+    // EVENTS
+    app.use("/api/events", authenticate, (req, res, next) => {
+      if (!setup.isConfigured()) return next();
+
+      const eventService = new EventService(db);
+      const chatService = new ChatService(db);
+      const userService = new UserService(db, licenseService);
+      const eventController = new EventController(eventService, chatService, userService);
+
+      return createEventRoutes(eventController)(req, res, next);
+    });
+
+
 
     // USER QUERIES
     app.use("/api/users/query", (req, res, next) => {

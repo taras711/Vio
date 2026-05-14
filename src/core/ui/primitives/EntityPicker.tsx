@@ -1,8 +1,6 @@
 import { useState, useMemo } from "react";
 import {
-  Box, TextField, IconButton, Tooltip, Paper,
-  Dialog, DialogTitle, DialogContent, DialogActions,
-  Button, Typography
+  Box, TextField, IconButton, Tooltip, Paper, Typography
 } from "@mui/material";
 
 interface EntityPickerProps<T> {
@@ -13,11 +11,12 @@ interface EntityPickerProps<T> {
   icon: React.ReactNode;
     excludedIds?: string[];
     fullWidth?: boolean;
+    required?: boolean;
   getId: (item: T) => string;
   getPrimaryText: (item: T) => string;
   getSecondaryText?: (item: T) => string | null;
   getSearchText: (item: T) => string;
-  
+  onOpenDialog: () => void;
 }
 
 export function EntityPicker<T>({
@@ -31,12 +30,13 @@ export function EntityPicker<T>({
   getPrimaryText,
   getSecondaryText,
   getSearchText,
-  fullWidth
+  onOpenDialog,
+  fullWidth,
+  required
 }: EntityPickerProps<T>) {
 
   const [query, setQuery] = useState("");
   const [isEditing, setIsEditing] = useState(false);
-  const [openModal, setOpenModal] = useState(false);
 
   const selected = items.find(i => getId(i) === value) || null;
 
@@ -65,7 +65,7 @@ export function EntityPicker<T>({
   return (
     <Box sx={{ position: "relative" }}>
       <TextField
-        
+        required={required}
         sx={{ width: 1 }}
         label={label}
         value={isEditing ? query : selected ? getPrimaryText(selected) : ""}
@@ -80,7 +80,7 @@ export function EntityPicker<T>({
         InputProps={{
           endAdornment: (
             <Tooltip title={`Select ${label}`} placement="top-end">
-              <IconButton onClick={() => setOpenModal(true)}>
+              <IconButton onClick={onOpenDialog}>
                 {icon}
               </IconButton>
             </Tooltip>
@@ -124,45 +124,6 @@ export function EntityPicker<T>({
           ))}
         </Paper>
       )}
-
-      <Dialog open={openModal} onClose={() => setOpenModal(false)} fullWidth maxWidth="sm">
-        <DialogTitle>Select {label}</DialogTitle>
-        <DialogContent dividers>
-          {filteredItems.length === 0 && (
-            <Typography variant="body2" sx={{ opacity: 0.7 }}>
-              No {label.toLowerCase()} found.
-            </Typography>
-          )}
-
-          {filteredItems.map(i => (
-            <Box
-              key={getId(i)}
-              sx={{
-                p: 1.5,
-                cursor: "pointer",
-                borderBottom: "1px solid #eee",
-                "&:hover": { backgroundColor: "action.hover" },
-              }}
-              onClick={() => {
-                onChange(getId(i));
-                setOpenModal(false);
-                setIsEditing(false);
-                setQuery("");
-              }}
-            >
-              <Typography>{getPrimaryText(i)}</Typography>
-              {getSecondaryText && (
-                <Typography variant="caption" sx={{ opacity: 0.7 }}>
-                  {getSecondaryText(i)}
-                </Typography>
-              )}
-            </Box>
-          ))}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenModal(false)}>Cancel</Button>
-        </DialogActions>
-      </Dialog>
     </Box>
   );
 }

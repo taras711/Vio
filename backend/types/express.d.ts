@@ -10,6 +10,7 @@ declare global {
     interface Request {
       auth?: AuthContext;
       user?: {
+        id: string;
         userId: string;
         role: string;
         areaId?: string;

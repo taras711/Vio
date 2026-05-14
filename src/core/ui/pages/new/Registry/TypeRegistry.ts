@@ -1,5 +1,6 @@
 import { PERMISSIONS } from "../../../../../../shared/permissions";
 import { EventForm } from "@src/core/ui/pages/forms/add/EventForm";
+import { CalendarPage } from "@pages/notification/BigCalendar";
 import { TaskForm } from "@src/core/ui/pages/forms/add/TaskForm";
 import { ProblemForm } from "@src/core/ui/pages/forms/add/ProblemForm";
 import { PlanForm } from "@src/core/ui/pages/forms/add/PlanForm";
@@ -18,7 +19,7 @@ export const addRegistry = {
     title: "Create Event",
     icon: CalendarPlus,
     description: "Meeting, shift, appointment",
-    component: EventForm,
+    component: CalendarPage,
     endpoint: "/events",
     perm: PERMISSIONS.EVENTS_CREATE,
   },

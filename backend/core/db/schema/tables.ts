@@ -56,6 +56,7 @@ export const TABLES = {
     suggestions: "suggestions",
     actions: "actions",
     locations: "locations",
+    chat_messages: "chat_messages",
     //celkem tabulek: 
 
 } as const;

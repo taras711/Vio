@@ -9,6 +9,8 @@ export function createLocationRoutes(controller: LocationController) {
   router.get("/by-sector/:sectorId", (req, res) => controller.getBySector(req, res));
   router.get("/visible", (req, res) => controller.getVisible(req, res));
   router.get("/by-area-sector/:areaId/:sectorId", (req, res) => controller.getByAreaSector(req, res));
+  router.get("/by-area-visibility/:areaId", controller.getByAreaVisibility);
+  router.get("/by-area-sector-visibility/:areaId/:sectorId", controller.getByAreaSectorVisibility); 
 
   return router;
 }

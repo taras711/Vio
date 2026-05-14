@@ -19,6 +19,7 @@ export default defineConfig({
       "@layout": path.resolve(__dirname, "src/core/ui/layout"),
       "@auth": path.resolve(__dirname, "src/auth"),
       "@hooks": path.resolve(__dirname, "src/core/ui/hooks"),
+      "@shaired": path.resolve(__dirname, "/shared"),
     },
   },
   server: {

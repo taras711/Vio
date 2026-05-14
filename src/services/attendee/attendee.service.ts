@@ -18,10 +18,18 @@ export const AttendeeService = {
     return handle<Attendee[]>(res);
   },
 
+  getByAreaVisibility: async (areaId: string): Promise<Attendee[]> => {
+    const res = await fetch(`${BASE}/by-area-visibility/${encodeURIComponent(areaId)}`);
+    return handle<Attendee[]>(res);
+  },
+
+  getByAreaSectorVisibility: async (areaId: string, sectorId: string): Promise<Attendee[]> => {
+    const res = await fetch(`${BASE}/by-area-sector-visibility/${encodeURIComponent(areaId)}/${encodeURIComponent(sectorId)}`);
+    return handle<Attendee[]>(res);
+  },
+
   getByAreaSector: async (areaId: string, sectorId: string): Promise<Attendee[]> => {
     const res = await fetch(`${BASE}/by-area-sector/${encodeURIComponent(areaId)}/${encodeURIComponent(sectorId)}`);
-    console.log("CALL getByAreaSector FE:", areaId, sectorId);
-    
     return handle<Attendee[]>(res);
   },
 
